@@ -271,15 +271,10 @@ if is_admin or is_master:
             st.plotly_chart(px.bar(df.groupby("Date")["Final Total (Item)"].sum().reset_index(), x="Date", y="Final Total (Item)", title="Revenue Over Time", color_discrete_sequence=["green"]), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(), x="Item", y="Qty", title="Top-Selling Items", color_discrete_sequence=["#FFD700"]), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Stall No")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index(), x="Stall No", y="Final Total (Item)", title="Stall-wise Revenue", color_discrete_sequence=["#FF0000"]), use_container_width=True)
-            
-            disc_df = df[df["Discount%"] > 0]
-            if not disc_df.empty:
-                st.plotly_chart(px.histogram(disc_df, x="Discount%", nbins=20, title="Distribution of Discounts"), use_container_width=True)
+            st.plotly_chart(px.bar(df.groupby("Stall No")["Discount%"].mean().reset_index(), x="Stall No", y="Discount%", title="Average Discount per Stall", color_discrete_sequence=["#FF69B4"]), use_container_width=True)
+            df["Discount Amt"] = df["Price"] * df["Qty"] * (df["Discount%"] / 100)
+            st.plotly_chart(px.bar(df.groupby("Stall No")["Discount Amt"].sum().reset_index(), x="Stall No", y="Discount Amt", title="Total Discount ₹ Given per Stall", color_discrete_sequence=["#FFA500"]), use_container_width=True)
 
-            rev_items = df.groupby("Item")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index()
-            st.plotly_chart(px.pie(rev_items.head(10), values="Final Total (Item)", names="Item", title="Revenue Share by Item"), use_container_width=True)
-        else:
-            st.info("No sales data found.")
 
 # ------------------------
 # User Management (master only)
