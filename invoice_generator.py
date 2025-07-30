@@ -55,12 +55,20 @@ st.title("Shilp Samagam Mela Invoicing System")
 import gspread
 from google.oauth2.service_account import Credentials
 
+from google.oauth2.service_account import Credentials
+import gspread
+
 def get_google_sheet():
     creds_dict = st.secrets["gcp_service_account"]
-    creds = Credentials.from_service_account_info(dict(creds_dict))
+    
+    # ✅ Add the Sheets API scope here
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    
+    creds = Credentials.from_service_account_info(dict(creds_dict), scopes=scopes)
     gc = gspread.authorize(creds)
-    sh = gc.open("invoices_records")
+    sh = gc.open("invoices_records")  # Make sure this sheet name is correct and shared with the service account
     return sh.sheet1
+
 
 @st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
 def fetch_sheet_df():
