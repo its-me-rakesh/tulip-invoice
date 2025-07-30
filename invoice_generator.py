@@ -30,7 +30,7 @@ authenticator = stauth.Authenticate(
 st.image("Tulip.jpeg", use_container_width=False, width=700)
 st.markdown("<div style='text-align: center; font-size: 14px; margin-bottom: 10px;'>Welcome to Tulip Billing</div>", unsafe_allow_html=True)
 
-name, auth_status, username = authenticator.login("Login", "main")
+name, auth_status, username = authenticator.login(label="Login", location="main")
 
 if auth_status is False:
     st.error("Incorrect username or password.")
