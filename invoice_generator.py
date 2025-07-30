@@ -56,25 +56,15 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 def get_google_sheet():
-    # ✅ Required scope to read/write Google Sheets
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly", "https://www.googleapis.com/auth/spreadsheets"]
 
-    # ✅ Pull credentials dict from Streamlit secrets
-    creds_dict = dict(st.secrets["gcp_service_account"])
-
-    # ✅ Build base credentials object
-    creds = Credentials.from_service_account_info(creds_dict)
-
-    # ✅ Apply the correct scope (this is critical!)
+    creds_dict = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(dict(creds_dict))
     scoped_creds = creds.with_scopes(scopes)
 
-    # ✅ Use gspread to authorize with scoped credentials
     gc = gspread.authorize(scoped_creds)
-
-    # ✅ Open your sheet
-    sh = gc.open("invoices_records")
+    sh = gc.open("invoices_records")  # Make sure the sheet name matches exactly
     return sh.sheet1
-
 
 
 @st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
