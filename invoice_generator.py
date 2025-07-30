@@ -269,7 +269,7 @@ if is_admin or is_master:
             col3.metric("Total Invoices", df["Invoice No"].nunique())
 
             st.plotly_chart(px.bar(df.groupby("Date")["Final Total (Item)"].sum().reset_index(), x="Date", y="Final Total (Item)", title="Revenue Over Time", color_discrete_sequence=["green"]), use_container_width=True)
-            st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(), x="Item", y="Qty", title="Top-Selling Items"), use_container_width=True)
+            st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(), x="Item", y="Qty", title="Top-Selling Items", color_discrete_sequence=["#FFD700"]), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Stall No")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index(), x="Stall No", y="Final Total (Item)", title="Stall-wise Revenue"), use_container_width=True)
             
             disc_df = df[df["Discount%"] > 0]
