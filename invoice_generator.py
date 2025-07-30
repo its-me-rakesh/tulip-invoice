@@ -52,9 +52,13 @@ st.title("Shilp Samagam Mela Invoicing System")
 # ------------------------
 # Google Sheet Utils
 # ------------------------
+import gspread
+from google.oauth2.service_account import Credentials
+
 def get_google_sheet():
-    creds_path = os.path.join(os.path.dirname(__file__), "credentials.json")
-    gc = gspread.service_account(filename=creds_path)
+    creds_dict = st.secrets["gcp_service_account"]
+    creds = Credentials.from_service_account_info(dict(creds_dict))
+    gc = gspread.authorize(creds)
     sh = gc.open("invoices_records")
     return sh.sheet1
 
