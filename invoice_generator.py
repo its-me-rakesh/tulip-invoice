@@ -268,54 +268,22 @@ if is_admin or is_master:
             col2.metric("Total Items Sold", int(df["Qty"].sum()))
             col3.metric("Total Invoices", df["Invoice No"].nunique())
 
-            st.markdown("### Revenue Over Time")
-            time_view = st.selectbox("Select View", ["Daily", "Monthly"])
-            if time_view == "Daily":
-                rev_df = df.groupby("Date")["Final Total (Item)"].sum().reset_index()
-                fig = px.line(rev_df, x="Date", y="Final Total (Item)", title="Revenue Over Time (Daily)")
+            st.markdown("### 📈 Revenue Over Time")
+            time_view = st.selectbox("Select View", ["Date", "Month"])
+
+            if time_view == "Date":
+                daily_df = df.groupby("Date")["Final Total (Item)"].sum().reset_index()
+                fig = px.bar(daily_df, x="Date", y="Final Total (Item)", title="Revenue by Date")
             else:
-                df['Month'] = df['Date'].dt.to_period('M').astype(str)
-                rev_df = df.groupby("Month")["Final Total (Item)"].sum().reset_index()
-                fig = px.line(rev_df, x="Month", y="Final Total (Item)", title="Revenue Over Time (Monthly)")
-                st.plotly_chart(fig, use_container_width=True)
+                df["Month"] = df["Date"].dt.to_period("M").astype(str)
+                monthly_df = df.groupby("Month")["Final Total (Item)"].sum().reset_index()
+                fig = px.bar(monthly_df, x="Month", y="Final Total (Item)", title="Revenue by Month")
+
+            st.plotly_chart(fig, use_container_width=True)
+
 
             st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(), x="Item", y="Qty", title="Top-Selling Items"), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Stall No")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index(), x="Stall No", y="Final Total (Item)", title="Stall-wise Revenue"), use_container_width=True)
-            st.markdown("### 🎯 Stall-Wise Performance")
-            grouped_df = df.groupby("Stall No").agg({
-                "Final Total (Item)": "sum",
-                "Qty": "sum",
-                "Discount%": "mean"
-            }).reset_index().rename(columns={
-                "Final Total (Item)": "Total Sales",
-                "Qty": "Total Quantity",
-                "Discount%": "Avg Discount%"
-            })
-            fig = px.bar(grouped_df, x="Stall No", y=["Total Sales", "Total Quantity", "Avg Discount%"],
-                         barmode="group", title="Stall-wise Total Sales, Quantity, Discount")
-            st.plotly_chart(fig, use_container_width=True)
-
-            st.markdown("### 📦 Stacked Bar: Item Categories per Stall")
-            item_stall_df = df.groupby(["Stall No", "Item"])["Final Total (Item)"].sum().reset_index()
-            fig = px.bar(item_stall_df, x="Stall No", y="Final Total (Item)", color="Item", 
-                         title="Total Sales per Item per Stall (Stacked)")
-            st.plotly_chart(fig, use_container_width=True)
-
-            st.markdown("### 🔍 Item-Level Insights")
-
-            # Top Items by Quantity
-            st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(),
-                                   x="Item", y="Qty", title="Top Items by Quantity Sold"), use_container_width=True)
-
-            # Top Revenue Items
-            st.plotly_chart(px.bar(df.groupby("Item")["Final Total (Item)"].sum().sort_values(ascending=False).head(10).reset_index(),
-                                   x="Item", y="Final Total (Item)", title="Top Revenue-Generating Items"), use_container_width=True)
-
-            # Heatmap: Item vs Stall
-            pivot = df.pivot_table(index="Item", columns="Stall No", values="Qty", aggfunc="sum", fill_value=0)
-            st.plotly_chart(px.imshow(pivot, text_auto=True, title="Heatmap: Item Sales Volume Across Stalls"),
-                            use_container_width=True)
-
             
             disc_df = df[df["Discount%"] > 0]
             if not disc_df.empty:
