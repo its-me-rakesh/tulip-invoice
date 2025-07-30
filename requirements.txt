@@ -1,0 +1,9 @@
+streamlit
+pandas
+gspread
+oauth2client
+PyYAML
+reportlab
+plotly
+streamlit-authenticator
+bcrypt
