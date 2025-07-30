@@ -268,20 +268,7 @@ if is_admin or is_master:
             col2.metric("Total Items Sold", int(df["Qty"].sum()))
             col3.metric("Total Invoices", df["Invoice No"].nunique())
 
-            st.markdown("### 📈 Revenue Over Time")
-            time_view = st.selectbox("Select View", ["Date", "Month"])
-
-            if time_view == "Date":
-                daily_df = df.groupby("Date")["Final Total (Item)"].sum().reset_index()
-                fig = px.bar(daily_df, x="Date", y="Final Total (Item)", title="Revenue by Date")
-            else:
-                df["Month"] = df["Date"].dt.to_period("M").astype(str)
-                monthly_df = df.groupby("Month")["Final Total (Item)"].sum().reset_index()
-                fig = px.bar(monthly_df, x="Month", y="Final Total (Item)", title="Revenue by Month")
-
-            st.plotly_chart(fig, use_container_width=True)
-
-
+            st.plotly_chart(px.bar(df.groupby("Date")["Final Total (Item)"].sum().reset_index(), x="Date", y="Final Total (Item)", title="Revenue Over Time", color_discrete_sequence=["green"]), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(), x="Item", y="Qty", title="Top-Selling Items"), use_container_width=True)
             st.plotly_chart(px.bar(df.groupby("Stall No")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index(), x="Stall No", y="Final Total (Item)", title="Stall-wise Revenue"), use_container_width=True)
             
