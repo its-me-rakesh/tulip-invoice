@@ -5,5 +5,5 @@ oauth2client
 PyYAML
 reportlab
 plotly
-streamlit-authenticator
+streamlit-authenticator==0.2.3
 bcrypt
