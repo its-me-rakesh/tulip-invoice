@@ -276,8 +276,8 @@ if is_admin or is_master:
             st.plotly_chart(px.bar(df.groupby("Stall No")["Discount Amt"].sum().reset_index(), x="Stall No", y="Discount Amt", title="Total Discount ₹ Given per Stall", color_discrete_sequence=["#FFA500"]), use_container_width=True)
             rev_items = df.groupby("Item")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index()
             st.plotly_chart(px.pie(rev_items.head(10), values="Final Total (Item)", names="Item", title="Revenue Share by Item"), use_container_width=True)
-            else:
-                st.info("No sales data found.")
+        else:
+            st.info("No sales data found.")
 
 # ------------------------
 # User Management (master only)
