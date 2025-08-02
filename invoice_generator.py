@@ -177,7 +177,26 @@ def draw_page(heading):
     inv.drawString(120, y + 60, "Tulip")
     inv.drawString(120, y + 68, "Signature")
 
-if st.button("🧾 Generate Invoice") and billing_counter and invoice_no:
+# --- mandatory validation ---
+missing = []
+if not billing_counter:
+    missing.append("Billing Counter")
+if not stall_no:
+    missing.append("Stall Number")
+
+if missing:
+    st.error(f"Please fill required field(s): {', '.join(missing)} to enable invoice generation.")
+    generate_disabled = True
+else:
+    generate_disabled = False
+
+# --- invoice generation trigger ---
+if st.button("🧾 Generate Invoice", disabled=generate_disabled):
+    # double-check guard (defensive)
+    if not billing_counter or not stall_no:
+        st.error("Billing Counter and Stall Number are required.")  # should not happen if button was disabled correctly
+        st.stop()
+
     total_amount = sum(it["total"] for it in items)
     discount_amt = total_amount * discount_percent / 100
     grand_total = total_amount - discount_amt
@@ -201,11 +220,9 @@ if st.button("🧾 Generate Invoice") and billing_counter and invoice_no:
     ] for it in items]
 
     append_to_google_sheet(rows)
-
-    # Clear cached sheet data so the new invoice is included immediately
     fetch_sheet_df.clear()
-
     st.success("✅ Invoice saved to Google Sheet and data refreshed!")
+
 
 
 
