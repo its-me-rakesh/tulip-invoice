@@ -248,7 +248,10 @@ if is_admin or is_master:
             selected_invoice = st.selectbox("🧾 Reprint Invoice", invoice_ids)
             selected_df = df[df["Invoice No"] == selected_invoice]
 
-            invoice_status = selected_df["Status"].iloc[0] if not selected_df.empty else "Active"
+            if not selected_df.empty and "Status" in selected_df.columns:
+                invoice_status = selected_df["Status"].iloc[0]
+            else:
+                invoice_status = "Active"
 
             if invoice_status == "Active":
                 if st.button("❌ Cancel This Invoice"):
