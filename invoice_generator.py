@@ -275,6 +275,7 @@ if is_admin or is_master:
 
                     fetch_sheet_df.clear()
                     df = fetch_sheet_df()  # force re-fetch after cache clear
+                    df = df[df["Status"] != "Cancelled"]
                     st.success(f"✅ Invoice {selected_invoice} restored.")
 
 
