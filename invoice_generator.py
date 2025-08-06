@@ -77,7 +77,9 @@ def fetch_sheet_df():
     try:
         worksheet = get_google_sheet()
         data = worksheet.get_all_records()
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        df.columns = df.columns.str.strip()  # ✅ Strip whitespace from headers
+        return df
     except Exception as e:
         st.warning(f"⚠️ Failed to fetch Google Sheet data: {e}")
         return pd.DataFrame()
