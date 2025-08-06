@@ -79,7 +79,7 @@ def fetch_sheet_df():
         worksheet = get_google_sheet()
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
-        df.columns = df.columns.str.strip()
+        df.columns = df.columns.astype(str).str.strip()
 
         # ✅ Force critical columns to string
         for col in ["Invoice No", "Stall No", "Phone No", "Payment Method", "Item", "Status"]:
@@ -113,7 +113,7 @@ col1, col2 = st.columns(2)
 with col1:
     stall_no = st.text_input("Stall Number")
 with col2:
-    date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
+    date = st.date_input("Invoice Date", value=datetime.today()).astype(str).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI"])
 
@@ -122,9 +122,9 @@ invoice_no = ""
 inv_numeric = 1
 all_df = fetch_sheet_df()
 if billing_counter and not all_df.empty:
-    df_counter = all_df[all_df["Invoice No"].astype(str).str.startswith(billing_counter)]
+    df_counter = all_df[all_df["Invoice No"].astype(str).astype(str).str.startswith(billing_counter)]
     if not df_counter.empty:
-        last = df_counter["Invoice No"].str.extract(rf"{billing_counter}_INV(\d+)")[0].dropna().astype(int).max()
+        last = df_counter["Invoice No"].astype(str).str.extract(rf"{billing_counter}_INV(\d+)")[0].dropna().astype(int).max()
         inv_numeric = last + 1
 invoice_no = f"{billing_counter}_INV{inv_numeric:02d}"
 
