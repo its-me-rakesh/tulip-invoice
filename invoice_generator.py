@@ -155,14 +155,6 @@ def draw_page(heading):
     inv.scale(1, -1)
     inv.translate(-10, -40)
 
-    inv.setFont("Times-Bold", 7)
-    inv.drawString(10, 20, "Tulip")
-    inv.setFont("Times-Bold", 4)
-    inv.drawString(10, 30, "5th Floor, NCUI Building 3, August Kranti Marg,")
-    inv.drawString(10, 35, "Siri Institutional Area, New Delhi, 110016")
-    inv.setFont("Times-Bold", 6)
-    inv.drawCentredString(100, 55, heading)
-
     inv.setFont("Times-Bold", 4)
     inv.drawString(15, 70, f"Stall No.: {stall_no}")
     inv.drawString(15, 80, f"Invoice No.: {invoice_no}")
