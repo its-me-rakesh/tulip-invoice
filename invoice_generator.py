@@ -243,7 +243,9 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
 if is_admin or is_master:
     st.subheader("📚 Previous Invoice Records")
     with st.expander("Show all past invoice entries"):
-        df = fetch_sheet_df()
+        fetch_sheet_df.clear()  # 🔄 force clear cache
+        df = fetch_sheet_df()   # 🆕 fetch fresh data
+        
         if not df.empty:
             st.dataframe(df)
             invoice_ids = df["Invoice No"].unique()
