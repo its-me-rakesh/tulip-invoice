@@ -118,7 +118,7 @@ invoice_no = ""
 inv_numeric = 1
 all_df = fetch_sheet_df()
 if billing_counter and not all_df.empty:
-    df_counter = all_df[all_df["Invoice No"].str.startswith(billing_counter)]
+    df_counter = all_df[all_df["Invoice No"].astype(str).str.startswith(billing_counter)]
     if not df_counter.empty:
         last = df_counter["Invoice No"].str.extract(rf"{billing_counter}_INV(\d+)")[0].dropna().astype(int).max()
         inv_numeric = last + 1
