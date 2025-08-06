@@ -232,7 +232,7 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     append_to_google_sheet(rows)
     fetch_sheet_df.clear()
     df = fetch_sheet_df()  # force re-fetch after cache clear
-    st.success("✅ Invoice saved to Google Sheet and data refreshed!")
+    st.success("✅ Invoice saved to your database and data refreshed!")
 
 
 # ------------------------
