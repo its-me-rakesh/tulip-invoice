@@ -79,6 +79,10 @@ def fetch_sheet_df():
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
         df.columns = df.columns.str.strip()  # ✅ Strip whitespace from headers
+        # ✅ Ensure all critical columns are string-typed (avoids .str errors)
+        for col in ["Invoice No", "Stall No", "Phone No", "Payment Method", "Item", "Status"]:
+            if col in df.columns:
+                df[col] = df[col].astype(str)
         return df
     except Exception as e:
         st.warning(f"⚠️ Failed to fetch Google Sheet data: {e}")
