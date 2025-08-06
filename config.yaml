@@ -1,5 +1,5 @@
 cookie:
-  expiry_days: 0
+  expiry_days: 2
   key: some_signature_key
   name: tulipauth
 credentials:
@@ -16,3 +16,4 @@ credentials:
       name: Rakesh
       password: $2b$12$2YtN.vfe1aPWy.nCANPzVepMU0HWxOr78ju/hzPQeguA0GEX75Kzi
       role: user
+
