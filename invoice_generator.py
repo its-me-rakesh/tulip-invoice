@@ -73,20 +73,24 @@ def get_google_sheet():
 
 
 @st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
+@st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
 def fetch_sheet_df():
     try:
         worksheet = get_google_sheet()
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
-        df.columns = df.columns.str.strip()  # ✅ Strip whitespace from headers
-        # ✅ Ensure all critical columns are string-typed (avoids .str errors)
+        df.columns = df.columns.str.strip()
+
+        # ✅ Force critical columns to string
         for col in ["Invoice No", "Stall No", "Phone No", "Payment Method", "Item", "Status"]:
             if col in df.columns:
                 df[col] = df[col].astype(str)
+
         return df
     except Exception as e:
         st.warning(f"⚠️ Failed to fetch Google Sheet data: {e}")
         return pd.DataFrame()
+
 
 def append_to_google_sheet(rows):
     try:
