@@ -231,6 +231,7 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
 
     append_to_google_sheet(rows)
     fetch_sheet_df.clear()
+    df = fetch_sheet_df()  # force re-fetch after cache clear
     st.success("✅ Invoice saved to Google Sheet and data refreshed!")
 
 
@@ -273,6 +274,7 @@ if is_admin or is_master:
                         worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Active")
 
                     fetch_sheet_df.clear()
+                    df = fetch_sheet_df()  # force re-fetch after cache clear
                     st.success(f"✅ Invoice {selected_invoice} restored.")
 
 
