@@ -152,7 +152,7 @@ def draw_page(heading):
     if not os.path.exists(logo_path):
         raise FileNotFoundError("Logo 'Tulip.jpeg' not found.")
     # Stretch full width (200), position at top (y = 0), adjust height as needed
-    inv.drawImage(ImageReader(logo_path), x=0, y=0, width=200, height=30, preserveAspectRatio=False, mask='auto')
+    inv.drawImage(ImageReader(logo_path), x=-10, y=0, width=200, height=30, preserveAspectRatio=False, mask='auto')
     inv.scale(1, -1)
     inv.translate(-10, -40)
 
