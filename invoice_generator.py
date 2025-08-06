@@ -128,6 +128,9 @@ for i in range(num_items):
         qty = st.number_input(f"Quantity {i + 1}", min_value=1, step=1, key=f"qty_{i}")
         items.append({"s_no": str(i + 1), "item": name, "price": price, "qty": qty, "total": price * qty})
 
+subtotal = sum(it["total"] for it in items)
+st.markdown(f"### 🧾 Current Subtotal: ₹ {subtotal:.2f}")
+
 discount_percent = st.number_input("Discount Percentage", min_value=0.0, max_value=100.0, value=0.0)
 
 def draw_page(heading):
