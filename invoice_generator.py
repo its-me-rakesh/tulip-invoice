@@ -266,6 +266,7 @@ if is_admin or is_master:
                         worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Cancelled")
 
                     fetch_sheet_df.clear()
+                    df = fetch_sheet_df()  # ✅ Force a fresh re-fetch from Google Sheets
                     st.success(f"🛑 Invoice {selected_invoice} marked as Cancelled.")
             else:
                 if st.button("↩️ Restore This Invoice"):
