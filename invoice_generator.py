@@ -38,6 +38,8 @@ if auth_status is False:
 elif auth_status is None:
     st.warning("Please enter your credentials.")
     st.stop()
+# ✅ Persist login until manually logged out
+authenticator.logout("🔒 Logout", "sidebar")
 
 
 role = config['credentials']['usernames'][username]['role']
