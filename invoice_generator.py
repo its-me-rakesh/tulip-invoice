@@ -85,7 +85,7 @@ def fetch_sheet_df():
 def append_to_google_sheet(rows):
     try:
         worksheet = get_google_sheet()
-        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Item", "Qty", "Price", "Total (Item)", "Final Total (Item)", "Discount%", "Final Total (Invoice)"]
+        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Item", "Qty", "Price", "Total (Item)", "Final Total (Item)", "Discount%", "Final Total (Invoice)", "Status"]
         if not worksheet.row_values(1):
             worksheet.insert_row(header, 1)
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
@@ -225,7 +225,8 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
         stall_no, invoice_no, date, ph_no, payment_method,
         it["item"], it["qty"], it["price"], it["total"],
         it["total"] * (1 - discount_percent / 100),
-        discount_percent, grand_total
+        discount_percent, grand_total,
+        "Active"
     ] for it in items]
 
     append_to_google_sheet(rows)
@@ -247,6 +248,33 @@ if is_admin or is_master:
             invoice_ids = df["Invoice No"].unique()
             selected_invoice = st.selectbox("🧾 Reprint Invoice", invoice_ids)
             selected_df = df[df["Invoice No"] == selected_invoice]
+
+            invoice_status = selected_df["Status"].iloc[0] if not selected_df.empty else "Active"
+
+            if invoice_status == "Active":
+                if st.button("❌ Cancel This Invoice"):
+                    worksheet = get_google_sheet()
+                    all_data = worksheet.get_all_records()
+                    df_all = pd.DataFrame(all_data)
+
+                    # Update all rows matching this invoice
+                    for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
+                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Cancelled")
+
+                    fetch_sheet_df.clear()
+                    st.success(f"🛑 Invoice {selected_invoice} marked as Cancelled.")
+            else:
+                if st.button("↩️ Restore This Invoice"):
+                    worksheet = get_google_sheet()
+                    all_data = worksheet.get_all_records()
+                    df_all = pd.DataFrame(all_data)
+
+                    for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
+                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Active")
+
+                    fetch_sheet_df.clear()
+                    st.success(f"✅ Invoice {selected_invoice} restored.")
+
 
             if st.button("🖨️ Generate PDF for Selected"):
                 invoice_items = selected_df.to_dict(orient="records")
@@ -278,6 +306,8 @@ if is_admin or is_master:
                 st.download_button("📥 Download Re-Generated PDF", buffer, file_name=f"{invoice_no}_copy.pdf")
         else:
             st.info("No invoice records found.")
+
+df = df[df["Status"] != "Cancelled"]
 
 # ------------------------
 # Sales Dashboard (admin/master only)
