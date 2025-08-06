@@ -83,7 +83,7 @@ def fetch_sheet_df():
 def append_to_google_sheet(rows):
     try:
         worksheet = get_google_sheet()
-        header = ["Stall No", "Invoice No", "Date", "Phone No", "Item", "Qty", "Price", "Total (Item)", "Final Total (Item)", "Discount%", "Final Total (Invoice)"]
+        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Item", "Qty", "Price", "Total (Item)", "Final Total (Item)", "Discount%", "Final Total (Invoice)"]
         if not worksheet.row_values(1):
             worksheet.insert_row(header, 1)
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
@@ -103,6 +103,8 @@ with col1:
 with col2:
     date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
+    payment_method = st.selectbox("Payment Method", ["Cash", "UPI"])
+
 
 invoice_no = ""
 inv_numeric = 1
@@ -151,8 +153,10 @@ def draw_page(heading):
     inv.drawString(15, 80, f"Invoice No.: {invoice_no}")
     inv.drawString(15, 90, f"Date: {date}")
     inv.drawString(15, 100, f"Customer Ph No.: {ph_no}")
+    inv.drawString(15, 110, f"Payment Method: {payment_method}")
 
-    start_y = 108
+
+    start_y = 120
     inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
     inv.setFont("Times-Bold", 4)
     inv.drawString(20, start_y + 10, "S.No")
@@ -213,7 +217,7 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     st.download_button("📄 Download Invoice PDF", buffer, file_name=f"{invoice_no}.pdf", mime="application/pdf")
 
     rows = [[
-        stall_no, invoice_no, date, ph_no,
+        stall_no, invoice_no, date, ph_no, payment_method,
         it["item"], it["qty"], it["price"], it["total"],
         it["total"] * (1 - discount_percent / 100),
         discount_percent, grand_total
@@ -253,6 +257,7 @@ if is_admin or is_master:
                 invoice_no = invoice_items[0]["Invoice No"]
                 date = invoice_items[0]["Date"]
                 ph_no = invoice_items[0]["Phone No"]
+                payment_method = invoice_items[0].get("Payment Method", "Cash")
                 discount_percent = invoice_items[0]["Discount%"]
                 total_amount = sum(it["total"] for it in items)
                 discount_amt = total_amount * discount_percent / 100
