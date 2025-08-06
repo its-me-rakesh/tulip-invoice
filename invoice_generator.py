@@ -307,7 +307,6 @@ if is_admin or is_master:
         else:
             st.info("No invoice records found.")
 
-df = df[df["Status"] != "Cancelled"]
 
 # ------------------------
 # Sales Dashboard (admin/master only)
