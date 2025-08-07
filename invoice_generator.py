@@ -172,7 +172,7 @@ def draw_page(heading):
     inv.drawString(110, 80, f"Customer Ph No.: {ph_no}")
     inv.drawString(110, 90, f"Payment Method: {payment_method}")
 
-    start_y = 120
+    start_y = 100
     inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
     inv.setFont("Times-Bold", 4)
     inv.drawString(20, start_y + 10, "S.No")
