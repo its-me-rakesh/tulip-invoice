@@ -94,7 +94,7 @@ def fetch_sheet_df():
 def append_to_google_sheet(rows):
     try:
         worksheet = get_google_sheet()
-        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Item", "Qty", "Price", "Total (Item)", "Final Total (Item)", "Discount%", "Final Total (Invoice)", "Status"]
+        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Item", "Qty", "Price", "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status"]
         if not worksheet.row_values(1):
             worksheet.insert_row(header, 1)
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
