@@ -110,7 +110,7 @@ billing_counter = st.text_input("Counter Name (e.g. MAIN)").strip().upper()
 st.subheader("2. Company & Invoice Details")
 col1, col2 = st.columns(2)
 with col1:
-    stall_no = st.text_input("Stall Number"), artisan_code = st.text_input("Artisian Code")
+    stall_no = st.text_input("Stall Number") artisan_code = st.text_input("Artisian Code")
 with col2:
     date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
