@@ -94,7 +94,7 @@ def fetch_sheet_df():
 def append_to_google_sheet(rows):
     try:
         worksheet = get_google_sheet()
-        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Artisian Code", "Item", "Qty", "Price", "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status"]
+        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Artisan Code", "Item", "Qty", "Price", "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status"]
         if not worksheet.row_values(1):
             worksheet.insert_row(header, 1)
         worksheet.append_rows(rows, value_input_option="USER_ENTERED")
@@ -111,7 +111,7 @@ st.subheader("2. Company & Invoice Details")
 col1, col2 = st.columns(2)
 with col1:
     stall_no = st.text_input("Stall Number") 
-    artisan_code = st.text_input("Artisian Code")
+    artisan_code = st.text_input("Artisan Code")
 with col2:
     date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
@@ -166,7 +166,7 @@ def draw_page(heading):
     inv.drawString(15, 80, f"Invoice No.: {invoice_no}")
     inv.drawString(15, 90, f"Date: {date}")
     inv.drawString(15, 100, f"Customer Ph No.: {ph_no}")
-    inv.drawString(15, 120, f"Artisian Code: {artisan_code}")
+    inv.drawString(15, 120, f"Artisan Code: {artisan_code}")
     inv.drawString(15, 110, f"Payment Method: {payment_method}")
 
 
@@ -224,14 +224,14 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     inv = canvas.Canvas(buffer, pagesize=(200, height), bottomup=0)
     draw_page("INVOICE")
     inv.showPage()
-    draw_page("ARTISIAN SLIP")
+    draw_page("ARTISAN SLIP")
     inv.save()
     buffer.seek(0)
 
     st.download_button("📄 Download Invoice PDF", buffer, file_name=f"{invoice_no}.pdf", mime="application/pdf")
 
     rows = [[
-        stall_no, invoice_no, date, ph_no, payment_method, artisian_code,
+        stall_no, invoice_no, date, ph_no, payment_method, artisan_code,
         it["item"], it["qty"], it["price"], it["total"],
         discount_percent,
         it["total"] * (1 - discount_percent / 100),
@@ -307,7 +307,7 @@ if is_admin or is_master:
                 invoice_no = invoice_items[0]["Invoice No"]
                 date = invoice_items[0]["Date"]
                 ph_no = invoice_items[0]["Phone No"]
-                artisan_code = invoice_items[0].get("Artisian Code", "")
+                artisan_code = invoice_items[0].get("Artisan Code", "")
                 payment_method = invoice_items[0].get("Payment Method", "Cash")
                 discount_percent = invoice_items[0]["Discount%"]
                 total_amount = sum(it["total"] for it in items)
@@ -318,7 +318,7 @@ if is_admin or is_master:
                 inv = canvas.Canvas(buffer, pagesize=(200, 250 + 15 * len(items)), bottomup=0)
                 draw_page("INVOICE")
                 inv.showPage()
-                draw_page("ARTISIAN SLIP")
+                draw_page("ARTISAN SLIP")
                 inv.save()
                 buffer.seek(0)
                 st.download_button("📥 Download Re-Generated PDF", buffer, file_name=f"{invoice_no}_copy.pdf")
