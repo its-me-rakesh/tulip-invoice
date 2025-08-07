@@ -155,6 +155,8 @@ def draw_page(heading):
     inv.drawImage(ImageReader(logo_path), x=-10, y=0, width=200, height=30, preserveAspectRatio=False, mask='auto')
     inv.scale(1, -1)
     inv.translate(-10, -40)
+    inv.setFont("Times-Bold", 6)
+    inv.drawCentredString(100, 55, heading)
 
     inv.setFont("Times-Bold", 4)
     inv.drawString(15, 70, f"Stall No.: {stall_no}")
