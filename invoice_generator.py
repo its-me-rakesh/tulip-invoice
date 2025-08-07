@@ -142,6 +142,9 @@ subtotal = sum(it["total"] for it in items)
 st.markdown(f"### 🧾 Current Subtotal: ₹ {subtotal:.2f}")
 
 discount_percent = st.number_input("Discount Percentage", min_value=0.0, max_value=100.0, value=0.0)
+# ✅ Show total payable after discount in real-time
+total_payable = subtotal * (1 - discount_percent / 100)
+st.markdown(f"### 💰 Total Payable After Discount: ₹ {total_payable:.2f}")
 
 def draw_page(heading):
     inv.line(5, 45, 195, 45)
