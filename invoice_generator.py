@@ -162,13 +162,15 @@ def draw_page(heading):
     inv.drawCentredString(100, 55, heading)
 
     inv.setFont("Times-Bold", 4)
-    inv.drawString(15, 70, f"Stall No.: {stall_no}")
-    inv.drawString(15, 80, f"Invoice No.: {invoice_no}")
+    # Left column
+    inv.drawString(15, 70, f"Invoice No.: {invoice_no}")
+    inv.drawString(15, 80, f"Artisan Code: {artisan_code}")
     inv.drawString(15, 90, f"Date: {date}")
-    inv.drawString(15, 100, f"Customer Ph No.: {ph_no}")
-    inv.drawString(15, 120, f"Artisan Code: {artisan_code}")
-    inv.drawString(15, 110, f"Payment Method: {payment_method}")
 
+    # Right column
+    inv.drawString(110, 70, f"Stall No.: {stall_no}")
+    inv.drawString(110, 80, f"Customer Ph No.: {ph_no}")
+    inv.drawString(110, 90, f"Payment Method: {payment_method}")
 
     start_y = 120
     inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
