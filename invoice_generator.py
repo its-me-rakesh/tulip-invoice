@@ -231,10 +231,12 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     rows = [[
         stall_no, invoice_no, date, ph_no, payment_method,
         it["item"], it["qty"], it["price"], it["total"],
+        discount_percent,
         it["total"] * (1 - discount_percent / 100),
-        discount_percent, grand_total,
+        grand_total,
         "Active"
     ] for it in items]
+
 
     append_to_google_sheet(rows)
     fetch_sheet_df.clear()
