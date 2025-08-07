@@ -112,7 +112,8 @@ col1, col2 = st.columns(2)
 with col1:
     stall_no = st.text_input("Stall Number")
 with col2:
-    date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
+    selected_date = st.date_input("Invoice Date", value=datetime.today())
+    date = selected_date.strftime("%d/%m/%Y")  # ✅ Ensures DD/MM/YYYY
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI"])
 
