@@ -133,9 +133,9 @@ num_items = st.number_input("How many items?", min_value=1, step=1)
 items = []
 for i in range(num_items):
     with st.expander(f"Item {i + 1}"):
-        name = st.text_input(f"Item Name {i + 1}", key=f"item_{i}")
-        price = st.number_input(f"Price per unit {i + 1}", min_value=0.0, step=0.1, key=f"price_{i}")
-        qty = st.number_input(f"Quantity {i + 1}", min_value=1, step=1, key=f"qty_{i}")
+        name = st.text_input("Item Name", key=f"item_{i}")
+        price = st.number_input("Price per unit", min_value=0.0, step=0.1, key=f"price_{i}")
+        qty = st.number_input("Quantity", min_value=1, step=1, key=f"qty_{i}")
         discount_item = st.number_input(f"Discount % for Item {i + 1}", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key=f"discount_{i}")
         
         total_before_discount = price * qty
