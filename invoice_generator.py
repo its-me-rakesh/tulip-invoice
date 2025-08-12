@@ -152,8 +152,8 @@ for i in range(num_items):
         })
 
 
-subtotal = sum(it["total"] for it in items)
-st.markdown(f"### 🧾 Current Subtotal: ₹ {subtotal:.2f}")
+subtotal = sum(it["final_total"] for it in items)  # after discount
+st.markdown(f"### 🧾 Current Subtotal (After Discount): ₹ {subtotal:.2f}")
 
 
 def draw_page(heading):
