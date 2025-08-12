@@ -134,17 +134,27 @@ items = []
 for i in range(num_items):
     with st.expander(f"Item {i + 1}"):
         name = st.text_input(f"Item Name {i + 1}", key=f"item_{i}")
-        price = st.number_input(f"Price per unit {i + 1}", key=f"price_{i}")
+        price = st.number_input(f"Price per unit {i + 1}", min_value=0.0, step=0.1, key=f"price_{i}")
         qty = st.number_input(f"Quantity {i + 1}", min_value=1, step=1, key=f"qty_{i}")
-        items.append({"s_no": str(i + 1), "item": name, "price": price, "qty": qty, "total": price * qty})
+        discount_item = st.number_input(f"Discount % for Item {i + 1}", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key=f"discount_{i}")
+        
+        total_before_discount = price * qty
+        total_after_discount = total_before_discount * (1 - discount_item / 100)
+
+        items.append({
+            "s_no": str(i + 1),
+            "item": name,
+            "price": price,
+            "qty": qty,
+            "discount_percent": discount_item,
+            "total": total_before_discount,
+            "final_total": total_after_discount
+        })
+
 
 subtotal = sum(it["total"] for it in items)
 st.markdown(f"### 🧾 Current Subtotal: ₹ {subtotal:.2f}")
 
-discount_percent = st.number_input("Discount Percentage", min_value=0.0, max_value=100.0, value=0.0)
-# ✅ Show total payable after discount in real-time
-total_payable = subtotal * (1 - discount_percent / 100)
-st.markdown(f"### 💰 Total Payable After Discount: ₹ {total_payable:.2f}")
 
 def draw_page(heading):
     inv.line(5, 45, 195, 45)
@@ -218,8 +228,8 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
         st.stop()
 
     total_amount = sum(it["total"] for it in items)
-    discount_amt = total_amount * discount_percent / 100
-    grand_total = total_amount - discount_amt
+    discount_amt = sum(it["total"] - it["final_total"] for it in items)
+    grand_total = sum(it["final_total"] for it in items)
 
     buffer = BytesIO()
     height = 250 + 15 * len(items)
@@ -235,8 +245,8 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     rows = [[
         stall_no, invoice_no, date, ph_no, payment_method, artisan_code,
         it["item"], it["qty"], it["price"], it["total"],
-        discount_percent,
-        it["total"] * (1 - discount_percent / 100),
+        it["discount_percent"],  # Per-item discount
+        it["final_total"],       # Final total after discount
         grand_total,
         "Active"
     ] for it in items]
