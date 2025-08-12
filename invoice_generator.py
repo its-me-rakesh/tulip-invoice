@@ -202,7 +202,7 @@ def draw_page(heading):
 
     inv.setFont("Times-Bold", 5)
     inv.drawString(15, y + 10, f"Subtotal: {total_amount:.2f}")
-    inv.drawString(15, y + 20, f"Discount ({discount_percent}%): {discount_amt:.2f}")
+    inv.drawString(15, y + 20, f"Total Discount: {discount_amt:.2f}")
     inv.drawString(140, y + 10, f"Grand Total: {grand_total:.2f}")
     inv.drawString(140, y + 60, "Tulip")
     inv.drawString(140, y + 68, "Signature")
