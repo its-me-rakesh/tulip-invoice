@@ -385,22 +385,19 @@ import streamlit_authenticator as stauth
 if is_master:
     st.subheader("👤 User Management")
 
-    # --- Assign Location Section ---
-    st.subheader("Assign Location to Role")
-    
-    # Get unique roles from config
-    roles_list = list(set([details["role"] for details in config["credentials"]["usernames"].values()]))
-    selected_role = st.selectbox("Select Role", roles_list)
-    location_input = st.text_input(f"Enter Location for Role: {selected_role}")
-    
+    # --- Assign Location to a Specific User ---
+    st.subheader("Assign Location to User")
+
+    usernames_list = list(config["credentials"]["usernames"].keys())
+    selected_user = st.selectbox("Select User", usernames_list)
+
+    location_input = st.text_input(f"Enter Location for {selected_user}")
+
     if st.button("Save Location"):
-        for username, details in config["credentials"]["usernames"].items():
-            if details["role"] == selected_role:
-                config["credentials"]["usernames"][username]["location"] = location_input
+        config["credentials"]["usernames"][selected_user]["location"] = location_input
         with open("config.yaml", "w") as f:
             yaml.dump(config, f)
-        st.success(f"Location '{location_input}' assigned to role '{selected_role}'")
-
+        st.success(f"Location '{location_input}' assigned to '{selected_user}'")
 
     st.markdown("### 👥 Existing Users")
     user_data = [
