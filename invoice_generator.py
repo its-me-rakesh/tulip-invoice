@@ -94,10 +94,22 @@ def fetch_sheet_df():
 def append_to_google_sheet(rows):
     try:
         worksheet = get_google_sheet()
-        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Artisan Code", "Item", "Qty", "Price", "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status"]
+        header = ["Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Artisan Code", "Item", "Qty", "Price", "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status", "Location"]
+        # Insert header if sheet is empty
         if not worksheet.row_values(1):
             worksheet.insert_row(header, 1)
-        worksheet.append_rows(rows, value_input_option="USER_ENTERED")
+
+        # Add location for each row based on logged-in user
+        current_user = st.session_state["username"]
+        current_user_location = config["credentials"]["usernames"][current_user].get("location", "")
+
+        rows_with_location = []
+        for row in rows:
+            row_with_loc = row + [current_user_location]  # append location as last column
+            rows_with_location.append(row_with_loc)
+
+        worksheet.append_rows(rows_with_location, value_input_option="USER_ENTERED")
+
     except Exception as e:
         st.warning(f"⚠️ Failed to update Google Sheet: {e}")
 
@@ -373,12 +385,30 @@ import streamlit_authenticator as stauth
 if is_master:
     st.subheader("👤 User Management")
 
+    # --- Assign Location Section ---
+    st.subheader("Assign Location to Role")
+    
+    # Get unique roles from config
+    roles_list = list(set([details["role"] for details in config["credentials"]["usernames"].values()]))
+    selected_role = st.selectbox("Select Role", roles_list)
+    location_input = st.text_input(f"Enter Location for Role: {selected_role}")
+    
+    if st.button("Save Location"):
+        for username, details in config["credentials"]["usernames"].items():
+            if details["role"] == selected_role:
+                config["credentials"]["usernames"][username]["location"] = location_input
+        with open("config.yaml", "w") as f:
+            yaml.dump(config, f)
+        st.success(f"Location '{location_input}' assigned to role '{selected_role}'")
+
+
     st.markdown("### 👥 Existing Users")
     user_data = [
         {
             "Username": uname,
             "Full Name": details.get("name", ""),
             "Role": details.get("role", ""),
+            "Location": details.get("location", "")
         }
         for uname, details in config['credentials']['usernames'].items()
     ]
