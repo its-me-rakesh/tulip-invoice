@@ -91,7 +91,7 @@ def update_config_on_github(updated_config):
         put_response.raise_for_status()
 
         st.success("✅ Config updated on GitHub successfully!")
-        st.experimental_rerun()
+        st.rerun()
 
     except Exception as e:
         st.error(f"❌ Failed to update config on GitHub: {e}")
