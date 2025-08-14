@@ -567,7 +567,7 @@ if is_master:
                 }
                 with open("config.yaml", "w") as f:
                     yaml.dump(config, f)
-                push_config_to_github(config)
+                push_config_to_github()
                 st.success(f"✅ User '{new_username}' with role '{new_role}' created successfully.")
                 st.rerun()
 
