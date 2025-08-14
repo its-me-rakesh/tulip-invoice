@@ -385,7 +385,9 @@ import streamlit_authenticator as stauth
 if is_master:
     st.subheader("👤 User Management")
 
-    # --- Assign Location to a Specific User ---
+# -------------------------------------------- 
+# Assign Location to a Specific User
+# --------------------------------------------
     st.subheader("Assign Location to User")
 
     usernames_list = list(config["credentials"]["usernames"].keys())
@@ -394,10 +396,14 @@ if is_master:
     location_input = st.text_input(f"Enter Location for {selected_user}")
 
     if st.button("Save Location"):
-        config["credentials"]["usernames"][selected_user]["location"] = location_input
-        with open("config.yaml", "w") as f:
-            yaml.dump(config, f)
-        st.success(f"Location '{location_input}' assigned to '{selected_user}'")
+        # When saving location changes
+    config["credentials"]["usernames"][selected_user]["location"] = location_input
+    
+    # Write changes to file
+    with open("config.yaml", "w") as f:
+        yaml.safe_dump(config, f, sort_keys=False)
+    
+    st.success(f"Location '{location_input}' assigned to '{selected_user}'")
 
     st.markdown("### 👥 Existing Users")
     user_data = [
