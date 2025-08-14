@@ -17,6 +17,11 @@ import requests
 import base64
 import os
 
+gcp_service_account = st.secrets["gcp_service_account"]
+GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
+GITHUB_REPO = st.secrets["GITHUB_REPO"]
+CONFIG_FILE_PATH = st.secrets["CONFIG_FILE_PATH"]
+
 def update_config_on_github(updated_config):
     try:
         # Read secrets
