@@ -5,17 +5,21 @@ cookie:
 credentials:
   usernames:
     admin1:
+      location: Delhi
       name: admin1
       password: $2b$12$XLJUl8l4YFf3gLN2b03P.uh67KxhIf4LyTVHMsy/oU9ODnLNmaNqO
       role: admin
-      location: Delhi
+    demo:
+      name: demo
+      password: $2b$12$.Gf3PqUEfuG4x6qL8mZfh.clgvQO4EVgwQV03rgQYbn9sDWGzWT0q
+      role: admin
     tulip:
+      location: Mumbai
       name: Tulip
       password: $2b$12$xtNDq.phIfDfCL/6DpmQ9u/76xDF3MicK5sPltwh6ZFQmfWQxyY6G
       role: master
-      location: Mumbai
     user1:
+      location: Kota
       name: Rakesh
       password: $2b$12$2YtN.vfe1aPWy.nCANPzVepMU0HWxOr78ju/hzPQeguA0GEX75Kzi
       role: user
-      location: Kota
