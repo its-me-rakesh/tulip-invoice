@@ -13,6 +13,51 @@ from google.auth.exceptions import GoogleAuthError
 import plotly.express as px
 import os
 import bcrypt
+import requests
+import base64
+import os
+
+def update_config_on_github(updated_config):
+    try:
+        # Read secrets
+        github_token = st.secrets["GITHUB_TOKEN"]
+        repo = st.secrets["GITHUB_REPO"]
+        config_path = st.secrets["CONFIG_FILE_PATH"]
+
+        # Get the file from GitHub (to fetch SHA for update)
+        get_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
+        headers = {"Authorization": f"token {github_token}"}
+        r = requests.get(get_url, headers=headers)
+        r.raise_for_status()
+        file_info = r.json()
+        sha = file_info["sha"]
+
+        # Convert updated config dict to YAML
+        import yaml
+        yaml_content = yaml.dump(updated_config, sort_keys=False)
+
+        # Encode to Base64
+        encoded_content = base64.b64encode(yaml_content.encode()).decode()
+
+        # Prepare commit payload
+        commit_message = "Update config.yaml from Streamlit app"
+        payload = {
+            "message": commit_message,
+            "content": encoded_content,
+            "sha": sha,
+            "branch": "main"  # Change if your default branch is different
+        }
+
+        # Send PUT request to GitHub API to update file
+        put_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
+        put_response = requests.put(put_url, headers=headers, json=payload)
+        put_response.raise_for_status()
+
+        st.success("✅ Config updated on GitHub successfully!")
+        st.experimental_rerun()
+
+    except Exception as e:
+        st.error(f"❌ Failed to update config on GitHub: {e}")
 
 # ------------------------
 # Authentication
@@ -399,6 +444,7 @@ if is_master:
     
     if st.button("Save Location"):
         config["credentials"]["usernames"][selected_user]["location"] = location_input
+        update_config_on_github(config)
         with open("config.yaml", "w") as f:
             yaml.safe_dump(config, f, sort_keys=False)
         st.success(f"Location '{location_input}' assigned to '{selected_user}'")
