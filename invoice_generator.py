@@ -389,20 +389,20 @@ if is_master:
 # Assign Location to a Specific User
 # --------------------------------------------
 
-st.subheader("Assign Location to User")
-
-usernames_list = list(config["credentials"]["usernames"].keys())
-selected_user = st.selectbox("Select User", usernames_list)
-
-current_location = config["credentials"]["usernames"][selected_user].get("location", "")
-location_input = st.text_input(f"Enter Location for {selected_user}", value=current_location)
-
-if st.button("Save Location"):
-    config["credentials"]["usernames"][selected_user]["location"] = location_input
-    with open("config.yaml", "w") as f:
-        yaml.safe_dump(config, f, sort_keys=False)
-    st.success(f"Location '{location_input}' assigned to '{selected_user}'")
-    st.experimental_rerun()
+    st.subheader("Assign Location to User")
+    
+    usernames_list = list(config["credentials"]["usernames"].keys())
+    selected_user = st.selectbox("Select User", usernames_list)
+    
+    current_location = config["credentials"]["usernames"][selected_user].get("location", "")
+    location_input = st.text_input(f"Enter Location for {selected_user}", value=current_location)
+    
+    if st.button("Save Location"):
+        config["credentials"]["usernames"][selected_user]["location"] = location_input
+        with open("config.yaml", "w") as f:
+            yaml.safe_dump(config, f, sort_keys=False)
+        st.success(f"Location '{location_input}' assigned to '{selected_user}'")
+        st.experimental_rerun()
 
     st.markdown("### 👥 Existing Users")
     user_data = [
