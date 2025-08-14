@@ -490,7 +490,6 @@ if is_master:
 
     # Existing users
     st.subheader("Existing Users")
-    st.rerun()
     users_data = []
     for username, details in config["credentials"]["usernames"].items():
         location = details.get("location", "—")  # Default dash if not set
