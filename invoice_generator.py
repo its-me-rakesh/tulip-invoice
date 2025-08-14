@@ -402,19 +402,16 @@ if is_master:
         with open("config.yaml", "w") as f:
             yaml.safe_dump(config, f, sort_keys=False)
         st.success(f"Location '{location_input}' assigned to '{selected_user}'")
-        st.experimental_rerun()
+        st.rerun()
 
-    st.markdown("### 👥 Existing Users")
-    user_data = [
-        {
-            "Username": uname,
-            "Full Name": details.get("name", ""),
-            "Role": details.get("role", ""),
-            "Location": details.get("location", "")
-        }
-        for uname, details in config['credentials']['usernames'].items()
-    ]
-    st.dataframe(pd.DataFrame(user_data))
+    # Existing users
+    st.subheader("Existing Users")
+    users_data = []
+    for username, details in config["credentials"]["usernames"].items():
+        location = details.get("location", "—")  # Default dash if not set
+        users_data.append([username, details["name"], details["role"], location])
+    
+    st.table(pd.DataFrame(users_data, columns=["Username", "Name", "Role", "Location"]))
 
     st.markdown("---")
     st.markdown("### 🔐 Reset or Change User Password")
