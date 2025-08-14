@@ -13,7 +13,7 @@ credentials:
       name: Tulip
       password: $2b$12$xtNDq.phIfDfCL/6DpmQ9u/76xDF3MicK5sPltwh6ZFQmfWQxyY6G
       role: master
-      location: Rajasthan
+      location: Delhi
     user1:
       name: Rakesh
       password: $2b$12$2YtN.vfe1aPWy.nCANPzVepMU0HWxOr78ju/hzPQeguA0GEX75Kzi
