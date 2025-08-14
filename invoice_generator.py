@@ -22,6 +22,38 @@ GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 GITHUB_REPO = st.secrets["GITHUB_REPO"]
 CONFIG_FILE_PATH = st.secrets["CONFIG_FILE_PATH"]
 
+from github import Github
+
+def push_config_to_github():
+    """Pushes the updated config.yaml to the GitHub repo."""
+    try:
+        # Load GitHub token and repo from Streamlit secrets
+        token = st.secrets["GITHUB_TOKEN"]
+        repo_name = st.secrets["GITHUB_REPO"]
+        config_file_path = st.secrets["CONFIG_FILE_PATH"]
+
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+
+        # Read the local config.yaml
+        with open(config_file_path, "r") as f:
+            updated_content = f.read()
+
+        # Get current file from repo
+        contents = repo.get_contents(config_file_path)
+
+        # Update the file in GitHub
+        repo.update_file(
+            path=config_file_path,
+            message="Update config.yaml via Streamlit app",
+            content=updated_content,
+            sha=contents.sha
+        )
+        st.success("✅ Config file successfully updated in GitHub.")
+    except Exception as e:
+        st.error(f"❌ Failed to update config.yaml in GitHub: {e}")
+
+
 def update_config_on_github(updated_config):
     try:
         # Read secrets
@@ -452,6 +484,7 @@ if is_master:
         update_config_on_github(config)
         with open("config.yaml", "w") as f:
             yaml.safe_dump(config, f, sort_keys=False)
+        push_config_to_github()
         st.success(f"Location '{location_input}' assigned to '{selected_user}'")
         st.rerun()
 
@@ -497,7 +530,9 @@ if is_master:
                     config['credentials']['usernames'][selected_user]['password'] = hashed_pass
                     with open("config.yaml", "w") as f:
                         yaml.dump(config, f)
+                    push_config_to_github()
                     st.success(f"✅ Password for master user '{selected_user}' has been updated.")
+                    st.rerun()
             else:
                 # Non-master users — no current password required
                 hashed_pass = stauth.Hasher([new_pass]).generate()[0]
@@ -532,7 +567,9 @@ if is_master:
                 }
                 with open("config.yaml", "w") as f:
                     yaml.dump(config, f)
+                push_config_to_github()
                 st.success(f"✅ User '{new_username}' with role '{new_role}' created successfully.")
+                st.rerun()
 
 if is_admin or is_master:
     st.sidebar.markdown("### 📂 Invoice Search & Export")
