@@ -15,7 +15,6 @@ import os
 import bcrypt
 import requests
 import base64
-import os
 
 gcp_service_account = st.secrets["gcp_service_account"]
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
@@ -70,7 +69,6 @@ def update_config_on_github(updated_config):
         sha = file_info["sha"]
 
         # Convert updated config dict to YAML
-        import yaml
         yaml_content = yaml.dump(updated_config, sort_keys=False)
 
         # Encode to Base64
@@ -136,7 +134,6 @@ st.title("Shilp Samagam Mela Invoicing System")
 # Google Sheet Utils
 # ------------------------
 from google.oauth2.service_account import Credentials
-import gspread
 
 def get_google_sheet():
     scopes = [
@@ -152,8 +149,6 @@ def get_google_sheet():
     sh = gc.open("invoices_records")  # must match sheet name
     return sh.sheet1
 
-
-@st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
 @st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
 def fetch_sheet_df():
     try:
@@ -375,27 +370,20 @@ if is_admin or is_master:
             if invoice_status == "Active":
                 if st.button("❌ Cancel This Invoice"):
                     worksheet = get_google_sheet()
-                    all_data = worksheet.get_all_records()
-                    df_all = pd.DataFrame(all_data)
-
-                    # Update all rows matching this invoice
-                    for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
-                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Cancelled")
-
-                    fetch_sheet_df.clear()
-                    df = fetch_sheet_df()  # ✅ Force a fresh re-fetch from Google Sheets
+                    cell = worksheet.find(selected_invoice)
+                    if cell:
+                        status_col = worksheet.row_values(1).index("Status") + 1
+                        worksheet.update_cell(cell.row, status_col, "Cancelled")
+                        fetch_sheet_df.clear()  # refresh cache
                     st.success(f"🛑 Invoice {selected_invoice} marked as Cancelled.")
             else:
                 if st.button("↩️ Restore This Invoice"):
                     worksheet = get_google_sheet()
-                    all_data = worksheet.get_all_records()
-                    df_all = pd.DataFrame(all_data)
-
-                    for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
-                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Active")
-
-                    fetch_sheet_df.clear()
-                    df = fetch_sheet_df()  # force re-fetch after cache clear
+                    cell = worksheet.find(selected_invoice)
+                    if cell:
+                        status_col = worksheet.row_values(1).index("Status") + 1
+                        worksheet.update_cell(cell.row, status_col, "Active")
+                        fetch_sheet_df.clear()
                     st.success(f"✅ Invoice {selected_invoice} restored.")
 
 
@@ -462,8 +450,6 @@ if is_admin or is_master:
 # ------------------------
 # User Management (master only)
 # ------------------------
-import streamlit_authenticator as stauth
-
 if is_master:
     st.subheader("👤 User Management")
 
