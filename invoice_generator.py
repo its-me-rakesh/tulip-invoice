@@ -339,16 +339,14 @@ with st.form("invoice_form"):
                 "final_total": total_after_discount
             })
 
-    # --- Totals ---
+    # --- Generate button ---
+    generate_invoice = st.form_submit_button("🧾 Generate Invoice")
+# ---------- Live Subtotal (OUTSIDE form for realtime update) ----------
+if items:
     subtotal = sum(it["total"] for it in items)
     discount_amt = sum(it["total"] - it["final_total"] for it in items)
     grand_total = sum(it["final_total"] for it in items)
-
-    st.metric("Subtotal (After Discount)", f"₹ {grand_total:.2f}")
-
-    # --- Generate button ---
-    generate_invoice = st.form_submit_button("🧾 Generate Invoice")
-
+    st.metric("🧾 Subtotal (After Discount)", f"₹ {grand_total:.2f}")
 # ---------- Generate Invoice Logic ----------
 if generate_invoice:
     if not billing_counter or not stall_no:
