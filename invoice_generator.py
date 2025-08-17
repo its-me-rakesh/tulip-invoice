@@ -130,9 +130,17 @@ def generate_invoice_number(counter: str, df: pd.DataFrame) -> str:
     """Generate next invoice number for a billing counter."""
     if df.empty:
         return f"{counter}_INV01"
+
     df_counter = df[df["Invoice No"].str.startswith(counter)]
-    last_num = df_counter["Invoice No"].str.extract(rf"{counter}_INV(\d+)")[0].dropna().astype(int).max(initial=0)
+    extracted = df_counter["Invoice No"].str.extract(rf"{counter}_INV(\d+)")[0].dropna()
+
+    if extracted.empty:
+        last_num = 0
+    else:
+        last_num = extracted.astype(int).max()
+
     return f"{counter}_INV{last_num + 1:02d}"
+
 
 def generate_invoice_pdf(invoice_no, artisan_code, date, stall_no, ph_no,
                          payment_method, items, total_amount, discount_amt, grand_total, logo="Tulip.jpeg"):
