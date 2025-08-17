@@ -1,33 +1,43 @@
 # invoice_generator.py — Modular Role-Based Invoice System
 
+# ------------------------
+# Imports
+# ------------------------
+import os
+import base64
+import bcrypt
+import yaml
+import requests
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 import streamlit_authenticator as stauth
-import yaml
-import pandas as pd
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
+
 from datetime import datetime
 from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+
 import gspread
 from google.auth.exceptions import GoogleAuthError
-import plotly.express as px
-import os
-import bcrypt
-import requests
-import base64
-import os
+from google.oauth2.service_account import Credentials
 
+from github import Github
+
+# ------------------------
+# Secrets
+# ------------------------
 gcp_service_account = st.secrets["gcp_service_account"]
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
 GITHUB_REPO = st.secrets["GITHUB_REPO"]
 CONFIG_FILE_PATH = st.secrets["CONFIG_FILE_PATH"]
 
-from github import Github
-
+# ------------------------
+# GitHub Config Utils
+# ------------------------
 def push_config_to_github():
     """Pushes the updated config.yaml to the GitHub repo."""
     try:
-        # Load GitHub token and repo from Streamlit secrets
         token = st.secrets["GITHUB_TOKEN"]
         repo_name = st.secrets["GITHUB_REPO"]
         config_file_path = st.secrets["CONFIG_FILE_PATH"]
@@ -35,14 +45,11 @@ def push_config_to_github():
         g = Github(token)
         repo = g.get_repo(repo_name)
 
-        # Read the local config.yaml
         with open(config_file_path, "r") as f:
             updated_content = f.read()
 
-        # Get current file from repo
         contents = repo.get_contents(config_file_path)
 
-        # Update the file in GitHub
         repo.update_file(
             path=config_file_path,
             message="Update config.yaml via Streamlit app",
@@ -56,12 +63,10 @@ def push_config_to_github():
 
 def update_config_on_github(updated_config):
     try:
-        # Read secrets
         github_token = st.secrets["GITHUB_TOKEN"]
         repo = st.secrets["GITHUB_REPO"]
         config_path = st.secrets["CONFIG_FILE_PATH"]
 
-        # Get the file from GitHub (to fetch SHA for update)
         get_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
         headers = {"Authorization": f"token {github_token}"}
         r = requests.get(get_url, headers=headers)
@@ -69,23 +74,16 @@ def update_config_on_github(updated_config):
         file_info = r.json()
         sha = file_info["sha"]
 
-        # Convert updated config dict to YAML
-        import yaml
         yaml_content = yaml.dump(updated_config, sort_keys=False)
-
-        # Encode to Base64
         encoded_content = base64.b64encode(yaml_content.encode()).decode()
 
-        # Prepare commit payload
-        commit_message = "Update config.yaml from Streamlit app"
         payload = {
-            "message": commit_message,
+            "message": "Update config.yaml from Streamlit app",
             "content": encoded_content,
             "sha": sha,
-            "branch": "main"  # Change if your default branch is different
+            "branch": "main"
         }
 
-        # Send PUT request to GitHub API to update file
         put_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
         put_response = requests.put(put_url, headers=headers, json=payload)
         put_response.raise_for_status()
@@ -95,6 +93,104 @@ def update_config_on_github(updated_config):
 
     except Exception as e:
         st.error(f"❌ Failed to update config on GitHub: {e}")
+
+# ------------------------
+# Authentication
+# ------------------------
+with open("config.yaml") as file:
+    config = yaml.safe_load(file)
+
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days']
+)
+
+st.image("Tulip.jpeg", use_container_width=False, width=700)
+st.markdown("<div style='text-align: center; font-size: 14px; margin-bottom: 10px;'>Welcome to Tulip Billing</div>", unsafe_allow_html=True)
+
+name, auth_status, username = authenticator.login("Login", "main")
+
+if auth_status is False:
+    st.error("Incorrect username or password.")
+    st.stop()
+elif auth_status is None:
+    st.warning("Please enter your credentials.")
+    st.stop()
+
+authenticator.logout("🔒 Logout", "sidebar")
+
+role = config['credentials']['usernames'][username]['role']
+is_master = role == 'master'
+is_admin = role == 'admin'
+is_user = role == 'user'
+
+st.set_page_config(page_title="Invoice Generator", layout="centered")
+st.success(f"Welcome, {name} 👋 | Role: {role.upper()}")
+st.title("Shilp Samagam Mela Invoicing System")
+
+# ------------------------
+# Google Sheet Utils
+# ------------------------
+def get_google_sheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    base_creds = Credentials.from_service_account_info(creds_dict)
+    scoped_creds = base_creds.with_scopes(scopes)
+
+    gc = gspread.authorize(scoped_creds)
+    sh = gc.open("invoices_records")
+    return sh.sheet1
+
+
+@st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
+def fetch_sheet_df():
+    try:
+        worksheet = get_google_sheet()
+        data = worksheet.get_all_records()
+        df = pd.DataFrame(data)
+        df.columns = df.columns.astype(str).str.strip()
+
+        cols_to_str = ["Invoice No", "Stall No", "Phone No", "Payment Method", "Item", "Status"]
+        for col in cols_to_str:
+            if col in df.columns:
+                df[col] = df[col].astype(str)
+
+        return df
+    except Exception as e:
+        st.warning(f"⚠️ Failed to fetch Google Sheet data: {e}")
+        return pd.DataFrame()
+
+
+def refresh_df():
+    fetch_sheet_df.clear()
+    return fetch_sheet_df()
+
+
+def append_to_google_sheet(rows):
+    try:
+        worksheet = get_google_sheet()
+        header = [
+            "Stall No", "Invoice No", "Date", "Phone No", "Payment Method", "Artisan Code", "Item", "Qty", "Price",
+            "Total (Item)", "Discount%", "Final Total (Item)", "Final Total (Invoice)", "Status", "Location"
+        ]
+        if not worksheet.row_values(1):
+            worksheet.insert_row(header, 1)
+
+        current_user = username
+        current_user_location = config["credentials"]["usernames"][current_user].get("location", "")
+
+        rows_with_location = [row + [current_user_location] for row in rows]
+
+        worksheet.append_rows(rows_with_location, value_input_option="USER_ENTERED")
+
+    except Exception as e:
+        st.warning(f"⚠️ Failed to update Google Sheet: {e}")
 
 # ------------------------
 # Authentication
@@ -347,8 +443,7 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
 
 
     append_to_google_sheet(rows)
-    fetch_sheet_df.clear()
-    df = fetch_sheet_df()  # force re-fetch after cache clear
+    refresh_df()  # force re-fetch after cache clear
     st.success("✅ Invoice saved to your database and data refreshed!")
 
 
@@ -358,11 +453,10 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
 if is_admin or is_master:
     st.subheader("📚 Previous Invoice Records")
     with st.expander("Show all past invoice entries"):
-        fetch_sheet_df.clear()  # 🔄 force clear cache
-        df = fetch_sheet_df()   # 🆕 fetch fresh data
+        refresh_df()  # 🆕 fetch fresh data
         
         if not df.empty:
-            st.dataframe(df)
+            st.dataframe(df, use_container_width=True, hide_index=True)
             invoice_ids = df["Invoice No"].unique()
             selected_invoice = st.selectbox("🧾 Reprint Invoice", invoice_ids)
             selected_df = df[df["Invoice No"] == selected_invoice]
@@ -382,8 +476,7 @@ if is_admin or is_master:
                     for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
                         worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Cancelled")
 
-                    fetch_sheet_df.clear()
-                    df = fetch_sheet_df()  # ✅ Force a fresh re-fetch from Google Sheets
+                    refresh_df()  # ✅ Force a fresh re-fetch from Google Sheets
                     st.success(f"🛑 Invoice {selected_invoice} marked as Cancelled.")
             else:
                 if st.button("↩️ Restore This Invoice"):
@@ -394,8 +487,7 @@ if is_admin or is_master:
                     for idx, row in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
                         worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Active")
 
-                    fetch_sheet_df.clear()
-                    df = fetch_sheet_df()  # force re-fetch after cache clear
+                    refresh_df() # force re-fetch after cache clear
                     st.success(f"✅ Invoice {selected_invoice} restored.")
 
 
