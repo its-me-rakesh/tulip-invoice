@@ -198,7 +198,7 @@ def append_to_google_sheet(rows):
 # ------------------------
 # Invoice Creation
 # ------------------------
-st.subheader("0. Organization")
+st.subheader("Organization")
 organization = st.selectbox("Select Organization", ["NBCFDC", "NSFDC", "NSKFDC"])
 
 st.subheader("1. Billing Counter")
