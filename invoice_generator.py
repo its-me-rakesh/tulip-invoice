@@ -260,10 +260,260 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     st.success("✅ Invoice saved to database & refreshed!")
 
 # ------------------------
-# (Keep Admin/Master Sections: Past Invoices, Dashboard, User Management, Export)
+# Past Invoices Viewer (admin/master only)
 # ------------------------
-# 🔹 For brevity, you can reuse your existing admin/master sections here without change.
-# 🔹 They will work fine with the refactored helper functions above.
+if is_admin or is_master:
+    st.subheader("📚 Previous Invoice Records")
+    with st.expander("Show all past invoice entries"):
+        fetch_sheet_df.clear()
+        df = fetch_sheet_df()
+
+        if not df.empty:
+            st.dataframe(df)
+            invoice_ids = df["Invoice No"].unique()
+            selected_invoice = st.selectbox("🧾 Reprint Invoice", invoice_ids)
+            selected_df = df[df["Invoice No"] == selected_invoice]
+
+            invoice_status = selected_df["Status"].iloc[0] if not selected_df.empty else "Active"
+
+            if invoice_status == "Active":
+                if st.button("❌ Cancel This Invoice"):
+                    worksheet = get_worksheet()
+                    all_data = worksheet.get_all_records()
+                    df_all = pd.DataFrame(all_data)
+                    for idx, _ in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
+                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Cancelled")
+                    fetch_sheet_df.clear()
+                    st.success(f"🛑 Invoice {selected_invoice} marked as Cancelled.")
+            else:
+                if st.button("↩️ Restore This Invoice"):
+                    worksheet = get_worksheet()
+                    all_data = worksheet.get_all_records()
+                    df_all = pd.DataFrame(all_data)
+                    for idx, _ in df_all[df_all["Invoice No"] == selected_invoice].iterrows():
+                        worksheet.update_cell(idx + 2, df_all.columns.get_loc("Status") + 1, "Active")
+                    fetch_sheet_df.clear()
+                    st.success(f"✅ Invoice {selected_invoice} restored.")
+
+            if st.button("🖨️ Generate PDF for Selected"):
+                invoice_items = selected_df.to_dict(orient="records")
+                items = [{
+                    "s_no": str(i + 1),
+                    "item": r["Item"],
+                    "price": r["Price"],
+                    "qty": r["Qty"],
+                    "total": r["Total (Item)"]
+                } for i, r in enumerate(invoice_items)]
+
+                stall_no = invoice_items[0]["Stall No"]
+                invoice_no = invoice_items[0]["Invoice No"]
+                date = invoice_items[0]["Date"]
+                ph_no = invoice_items[0]["Phone No"]
+                artisan_code = invoice_items[0].get("Artisan Code", "")
+                payment_method = invoice_items[0].get("Payment Method", "Cash")
+                discount_percent = invoice_items[0]["Discount%"]
+                total_amount = sum(it["total"] for it in items)
+                discount_amt = total_amount * discount_percent / 100
+                grand_total = invoice_items[0]["Final Total (Invoice)"]
+
+                buffer = generate_invoice_pdf(
+                    invoice_no, artisan_code, date, stall_no, ph_no,
+                    payment_method, items, total_amount, discount_amt, grand_total
+                )
+                st.download_button("📥 Download Re-Generated PDF", buffer, file_name=f"{invoice_no}_copy.pdf")
+        else:
+            st.info("No invoice records found.")
+
+# ------------------------
+# Sales Dashboard (admin/master only)
+# ------------------------
+if is_admin or is_master:
+    st.subheader("📊 Sales Dashboard")
+    with st.expander("View Sales Analytics"):
+        df = fetch_sheet_df()
+        if not df.empty:
+            df["Date"] = pd.to_datetime(df["Date"], dayfirst=True, errors="coerce")
+
+            st.markdown("### Summary Stats")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Total Revenue", f"₹{df['Final Total (Item)'].sum():,.2f}")
+            col2.metric("Total Items Sold", int(df["Qty"].sum()))
+            col3.metric("Total Invoices", df["Invoice No"].nunique())
+
+            st.plotly_chart(px.bar(df.groupby("Date")["Final Total (Item)"].sum().reset_index(),
+                                   x="Date", y="Final Total (Item)",
+                                   title="Revenue Over Time"), use_container_width=True)
+
+            st.plotly_chart(px.bar(df.groupby("Item")["Qty"].sum().sort_values(ascending=False).head(10).reset_index(),
+                                   x="Item", y="Qty", title="Top-Selling Items"), use_container_width=True)
+
+            st.plotly_chart(px.bar(df.groupby("Stall No")["Final Total (Item)"].sum().reset_index(),
+                                   x="Stall No", y="Final Total (Item)", title="Stall-wise Revenue"),
+                                   use_container_width=True)
+
+            st.plotly_chart(px.bar(df.groupby("Stall No")["Discount%"].mean().reset_index(),
+                                   x="Stall No", y="Discount%", title="Average Discount per Stall"),
+                                   use_container_width=True)
+
+            df["Discount Amt"] = df["Price"] * df["Qty"] * (df["Discount%"] / 100)
+            st.plotly_chart(px.bar(df.groupby("Stall No")["Discount Amt"].sum().reset_index(),
+                                   x="Stall No", y="Discount Amt", title="Total Discount ₹ Given per Stall"),
+                                   use_container_width=True)
+
+            rev_items = df.groupby("Item")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index()
+            st.plotly_chart(px.pie(rev_items.head(10), values="Final Total (Item)", names="Item",
+                                   title="Revenue Share by Item"), use_container_width=True)
+        else:
+            st.info("No sales data found.")
+
+# ------------------------
+# User Management (master only)
+# ------------------------
+if is_master:
+    st.subheader("👤 User Management")
+
+    # Assign location
+    st.subheader("Assign Location to User")
+    usernames_list = list(config["credentials"]["usernames"].keys())
+    selected_user = st.selectbox("Select User", usernames_list)
+
+    current_location = config["credentials"]["usernames"][selected_user].get("location", "")
+    location_input = st.text_input(f"Enter Location for {selected_user}", value=current_location)
+
+    if st.button("Save Location"):
+        config["credentials"]["usernames"][selected_user]["location"] = location_input
+        update_config_on_github(config)
+        with open("config.yaml", "w") as f:
+            yaml.safe_dump(config, f, sort_keys=False)
+        st.success(f"Location '{location_input}' assigned to '{selected_user}'")
+        st.rerun()
+
+    # Existing users
+    st.subheader("Existing Users")
+    users_data = []
+    for uname, details in config["credentials"]["usernames"].items():
+        loc = details.get("location", "—")
+        users_data.append([uname, details["name"], details["role"], loc])
+    st.table(pd.DataFrame(users_data, columns=["Username", "Name", "Role", "Location"]))
+
+    # Reset Password
+    st.markdown("### 🔐 Reset or Change User Password")
+    with st.form("reset_password_form"):
+        existing_users = list(config['credentials']['usernames'].keys())
+        selected_user = st.selectbox("Select User", existing_users)
+        selected_role = config['credentials']['usernames'][selected_user]['role']
+
+        current_pass_input = ""
+        if selected_role == "master":
+            current_pass_input = st.text_input("Enter Current Password (required for master user)", type="password")
+
+        new_pass = st.text_input("Enter New Password", type="password")
+        confirm_pass = st.text_input("Confirm New Password", type="password")
+        reset_btn = st.form_submit_button("Update Password")
+
+        if reset_btn:
+            if not new_pass or not confirm_pass:
+                st.error("❗ Both password fields are required.")
+            elif new_pass != confirm_pass:
+                st.error("❗ Passwords do not match.")
+            elif len(new_pass) < 6:
+                st.error("❗ Password must be at least 6 characters.")
+            elif selected_role == "master":
+                stored_hash = config['credentials']['usernames'][selected_user]['password']
+                if not bcrypt.checkpw(current_pass_input.encode(), stored_hash.encode()):
+                    st.error("🚫 Incorrect current password.")
+                else:
+                    hashed_pass = stauth.Hasher([new_pass]).generate()[0]
+                    config['credentials']['usernames'][selected_user]['password'] = hashed_pass
+                    with open("config.yaml", "w") as f:
+                        yaml.dump(config, f)
+                    update_config_on_github(config)
+                    st.success(f"✅ Password for master user '{selected_user}' updated.")
+                    st.rerun()
+            else:
+                hashed_pass = stauth.Hasher([new_pass]).generate()[0]
+                config['credentials']['usernames'][selected_user]['password'] = hashed_pass
+                with open("config.yaml", "w") as f:
+                    yaml.dump(config, f)
+                update_config_on_github(config)
+                st.success(f"✅ Password for user '{selected_user}' updated.")
+
+    # Create new user
+    st.markdown("### ➕ Create New User")
+    with st.form("add_user_form"):
+        new_username = st.text_input("Username").strip()
+        new_name = st.text_input("Full Name").strip()
+        new_password = st.text_input("Password", type="password")
+        new_role = st.selectbox("Assign Role", ["admin", "user"])
+        create_btn = st.form_submit_button("Create User")
+
+        if create_btn:
+            if not new_username or not new_password:
+                st.error("❗ Username and Password cannot be empty.")
+            elif new_username in config['credentials']['usernames']:
+                st.error("🚫 Username already exists.")
+            elif len(new_password) < 6:
+                st.error("🔐 Password must be at least 6 characters.")
+            else:
+                hashed_password = stauth.Hasher([new_password]).generate()[0]
+                config['credentials']['usernames'][new_username] = {
+                    "name": new_name,
+                    "password": hashed_password,
+                    "role": new_role
+                }
+                with open("config.yaml", "w") as f:
+                    yaml.dump(config, f)
+                update_config_on_github(config)
+                st.success(f"✅ User '{new_username}' created successfully.")
+                st.rerun()
+
+# ------------------------
+# Invoice Search & Export (admin/master only)
+# ------------------------
+if is_admin or is_master:
+    st.sidebar.markdown("### 📂 Invoice Search & Export")
+    df = fetch_sheet_df()
+
+    if not df.empty:
+        stall_filter = st.sidebar.multiselect("🔎 Filter by Stall No", sorted(df["Stall No"].unique()))
+        payment_filter = st.sidebar.multiselect("💰 Payment Method", sorted(df["Payment Method"].unique()))
+        status_filter = st.sidebar.multiselect("📌 Status", sorted(df["Status"].unique()))
+        start_date = st.sidebar.date_input("📅 Start Date", value=None)
+        end_date = st.sidebar.date_input("📅 End Date", value=None)
+
+        filtered_df = df.copy()
+        if stall_filter:
+            filtered_df = filtered_df[filtered_df["Stall No"].isin(stall_filter)]
+        if payment_filter:
+            filtered_df = filtered_df[filtered_df["Payment Method"].isin(payment_filter)]
+        if status_filter:
+            filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
+        if start_date:
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= pd.to_datetime(start_date)]
+        if end_date:
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= pd.to_datetime(end_date)]
+
+        st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
+
+        export_format = st.sidebar.radio("📁 Export Format", ["Excel", "CSV"], horizontal=True)
+        export_filename = f"invoices_export.{ 'xlsx' if export_format == 'Excel' else 'csv' }"
+
+        if export_format == "Excel":
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                filtered_df.to_excel(writer, index=False, sheet_name='Invoices')
+            output.seek(0)
+            st.sidebar.download_button("📤 Export Filtered", data=output,
+                                       file_name=export_filename,
+                                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        else:
+            csv = filtered_df.to_csv(index=False).encode('utf-8')
+            st.sidebar.download_button("📤 Export Filtered", data=csv,
+                                       file_name=export_filename,
+                                       mime="text/csv")
+    else:
+        st.sidebar.info("No data available for filtering/export.")
+
 
 # Footer
 st.markdown(
