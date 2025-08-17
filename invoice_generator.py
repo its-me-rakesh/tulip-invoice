@@ -187,7 +187,7 @@ def append_to_google_sheet(rows):
 
         rows_with_location = []
         for row in rows:
-            row_with_loc = row + [current_user_location]  # append location as last column
+            row_with_loc = row + [current_user_location] + [organization] 
             rows_with_location.append(row_with_loc)
 
         worksheet.append_rows(rows_with_location, value_input_option="USER_ENTERED")
@@ -198,6 +198,9 @@ def append_to_google_sheet(rows):
 # ------------------------
 # Invoice Creation
 # ------------------------
+st.subheader("0. Organization")
+organization = st.selectbox("Select Organization", ["NBCFDC", "NSFDC", "NSKFDC"])
+
 st.subheader("1. Billing Counter")
 billing_counter = st.text_input("Counter Name (e.g. MAIN)").strip().upper()
 
@@ -342,7 +345,7 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
         it["discount_percent"],  # Per-item discount
         it["final_total"],       # Final total after discount
         grand_total,
-        "Active"
+        "Active", organization
     ] for it in items]
 
 
