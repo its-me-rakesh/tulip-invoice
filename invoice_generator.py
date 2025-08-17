@@ -234,12 +234,22 @@ st.markdown(f"### 🧾 Current Subtotal: ₹ {subtotal:.2f}")
 # ------------------------
 # Invoice Generation
 # ------------------------
+# --- mandatory validation ---
 missing_fields = []
-if not billing_counter: missing_fields.append("Billing Counter")
-if not stall_no: missing_fields.append("Stall Number")
-generate_disabled = bool(missing_fields)
+if not billing_counter:
+    missing_fields.append("Billing Counter")
+if not stall_no:
+    missing_fields.append("Stall Number")
 
+if missing_fields:
+    st.error(f"Please fill required field(s): {', '.join(missing_fields)} to enable invoice generation.")
+    generate_disabled = True
+else:
+    generate_disabled = False
+
+# --- invoice generation trigger ---
 if st.button("🧾 Generate Invoice", disabled=generate_disabled):
+
     total_amount = sum(it["total"] for it in items)
     discount_amt = sum(it["total"] - it["final_total"] for it in items)
     grand_total = subtotal
