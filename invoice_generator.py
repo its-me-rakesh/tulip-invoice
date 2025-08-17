@@ -208,99 +208,13 @@ def append_to_google_sheet(rows, username, config):
         st.error(f"⚠️ Failed to update Google Sheet: {e}")
 
 # ============================================
-# Part 4: Invoice Creation
+# Part 4: Invoice Creation (Realtime Subtotal with session_state)
 # ============================================
 
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from datetime import datetime
-from io import BytesIO
-import os
-
-# ---------- Helper: Generate Next Invoice No ----------
-def get_next_invoice_no(counter: str, df: pd.DataFrame) -> str:
-    """Generate the next invoice number for the given counter."""
-    inv_numeric = 1
-    if counter and not df.empty:
-        df_counter = df[df["Invoice No"].str.startswith(counter)]
-        if not df_counter.empty:
-            last = (
-                df_counter["Invoice No"]
-                .str.extract(rf"{counter}_INV(\d+)")
-                .dropna()[0]
-                .astype(int)
-                .max()
-            )
-            inv_numeric = last + 1
-    return f"{counter}_INV{inv_numeric:02d}"
-
-
-# ---------- Helper: Draw Invoice Page ----------
-def draw_page(inv, invoice_no, artisan_code, date, stall_no, ph_no, payment_method, items, totals, heading):
-    """
-    Draw a single invoice page (Invoice or Artisan Slip).
-    - inv: canvas object
-    - items: list of dicts [{s_no, item, price, qty, total}]
-    - totals: dict with subtotal, discount, grand_total
-    """
-    inv.line(5, 45, 195, 45)
-    inv.translate(10, 40)
-    inv.scale(1, -1)
-
-    # --- Logo ---
-    if not os.path.exists(LOGO_PATH):
-        raise FileNotFoundError(f"Logo '{LOGO_PATH}' not found.")
-    inv.drawImage(ImageReader(LOGO_PATH), x=-10, y=0, width=200, height=40, preserveAspectRatio=False, mask='auto')
-    inv.scale(1, -1)
-    inv.translate(-10, -40)
-
-    # --- Heading ---
-    inv.setFont("Times-Bold", 6)
-    inv.drawCentredString(100, 55, heading)
-
-    # --- Company/Invoice details ---
-    inv.setFont("Times-Bold", 4)
-    inv.drawString(15, 70, f"Invoice No.: {invoice_no}")
-    inv.drawString(15, 80, f"Artisan Code: {artisan_code}")
-    inv.drawString(15, 90, f"Date: {date}")
-
-    inv.drawString(110, 70, f"Stall No.: {stall_no}")
-    inv.drawString(110, 80, f"Customer Ph No.: {ph_no}")
-    inv.drawString(110, 90, f"Payment Method: {payment_method}")
-
-    # --- Items Table ---
-    start_y = 100
-    inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
-    inv.setFont("Times-Bold", 4)
-    inv.drawString(20, start_y + 10, "S.No")
-    inv.drawString(45, start_y + 10, "Item")
-    inv.drawString(100, start_y + 10, "Price")
-    inv.drawString(130, start_y + 10, "Qty")
-    inv.drawString(155, start_y + 10, "Total")
-
-    y = start_y + 20
-    for it in items:
-        inv.drawString(20, y, it["s_no"])
-        inv.drawString(45, y, it["item"])
-        inv.drawString(100, y, f"{it['price']:.2f}")
-        inv.drawString(130, y, str(it["qty"]))
-        inv.drawString(155, y, f"{it['total']:.2f}")
-        y += 15
-
-    # --- Totals ---
-    inv.setFont("Times-Bold", 5)
-    inv.drawString(15, y + 10, f"Subtotal: {totals['subtotal']:.2f}")
-    inv.drawString(15, y + 20, f"Total Discount: {totals['discount']:.2f}")
-    inv.drawString(140, y + 10, f"Grand Total: {totals['grand_total']:.2f}")
-    inv.drawString(140, y + 60, "Tulip")
-    inv.drawString(140, y + 68, "Signature")
-
-
-# ---------- Invoice Form ----------
 st.subheader("🧾 Create New Invoice")
 
 with st.form("invoice_form"):
-    # --- Billing counter & company details ---
+    # --- Billing Counter & Company Details ---
     billing_counter = st.text_input("Counter Name (e.g. MAIN)").strip().upper()
     col1, col2 = st.columns(2)
     with col1:
@@ -317,15 +231,23 @@ with st.form("invoice_form"):
 
     # --- Items ---
     st.subheader("Add Items to Invoice")
-    num_items = st.number_input("How many items?", min_value=1, step=1, value=1)
+    num_items = st.number_input("How many items?", min_value=1, step=1, value=1, key="num_items")
+
     items = []
+    subtotal = 0
+    discount_amt = 0
+    grand_total = 0
+
     for i in range(num_items):
         with st.expander(f"Item {i + 1}"):
             name = st.text_input("Item Name", key=f"item_{i}")
             price = st.number_input("Price per unit", min_value=0.0, step=0.1, key=f"price_{i}")
             qty = st.number_input("Quantity", min_value=1, step=1, key=f"qty_{i}")
-            discount_item = st.number_input(f"Discount % for Item {i + 1}", min_value=0.0, max_value=100.0, value=0.0, step=0.1, key=f"discount_{i}")
+            discount_item = st.number_input(f"Discount % for Item {i+1}", 
+                                            min_value=0.0, max_value=100.0, 
+                                            value=0.0, step=0.1, key=f"discount_{i}")
 
+            # --- Realtime subtotal calculations with session_state ---
             total_before_discount = price * qty
             total_after_discount = total_before_discount * (1 - discount_item / 100)
 
@@ -339,16 +261,23 @@ with st.form("invoice_form"):
                 "final_total": total_after_discount
             })
 
-    # --- Totals ---
-    subtotal = sum(it["total"] for it in items)
-    discount_amt = sum(it["total"] - it["final_total"] for it in items)
-    grand_total = sum(it["final_total"] for it in items)
+            subtotal += total_before_discount
+            discount_amt += (total_before_discount - total_after_discount)
+            grand_total += total_after_discount
 
-    st.metric("Subtotal (After Discount)", f"₹ {grand_total:.2f}")
+    # --- Store in session_state for realtime UI ---
+    st.session_state["subtotal"] = subtotal
+    st.session_state["discount_amt"] = discount_amt
+    st.session_state["grand_total"] = grand_total
 
-    # --- Generate button ---
+    # --- Realtime Totals (update without pressing Generate) ---
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Subtotal", f"₹ {st.session_state['subtotal']:.2f}")
+    col2.metric("Discount", f"₹ {st.session_state['discount_amt']:.2f}")
+    col3.metric("Grand Total", f"₹ {st.session_state['grand_total']:.2f}")
+
+    # --- Generate Invoice ---
     generate_invoice = st.form_submit_button("🧾 Generate Invoice")
-
 
 # ---------- Generate Invoice Logic ----------
 if generate_invoice:
@@ -359,7 +288,11 @@ if generate_invoice:
         buffer = BytesIO()
         height = 250 + 15 * len(items)
         inv = canvas.Canvas(buffer, pagesize=(200, height), bottomup=0)
-        totals_dict = {"subtotal": subtotal, "discount": discount_amt, "grand_total": grand_total}
+        totals_dict = {
+            "subtotal": st.session_state["subtotal"],
+            "discount": st.session_state["discount_amt"],
+            "grand_total": st.session_state["grand_total"]
+        }
         draw_page(inv, invoice_no, artisan_code, date, stall_no, ph_no, payment_method, items, totals_dict, "INVOICE")
         inv.showPage()
         draw_page(inv, invoice_no, artisan_code, date, stall_no, ph_no, payment_method, items, totals_dict, "ARTISAN SLIP")
@@ -373,12 +306,12 @@ if generate_invoice:
         rows = [[
             stall_no, invoice_no, date, ph_no, payment_method, artisan_code,
             it["item"], it["qty"], it["price"], it["total"],
-            it["discount_percent"], it["final_total"], grand_total, "Active"
+            it["discount_percent"], it["final_total"], st.session_state["grand_total"], "Active"
         ] for it in items]
 
         # Save to Google Sheets
         append_to_google_sheet(rows, username, config)
-        fetch_sheet_df(refresh=True)  # refresh cache
+        fetch_sheet_df(refresh=True)
         st.success("✅ Invoice saved & data refreshed!")
 
 
