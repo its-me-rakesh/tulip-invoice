@@ -339,10 +339,9 @@ with st.form("invoice_form"):
                 "final_total": total_after_discount
             })
     # --- Live Subtotals (Realtime) ---
-    if items:
-        subtotal = sum(it["total"] for it in items)
-        discount_amt = sum(it["total"] - it["final_total"] for it in items)
-        grand_total = sum(it["final_total"] for it in items)
+    subtotal = sum(it["total"] for it in items)
+    discount_amt = sum(it["total"] - it["final_total"] for it in items)
+    grand_total = sum(it["final_total"] for it in items)
     
         col1, col2, col3 = st.columns(3)
         col1.metric("Subtotal", f"₹ {subtotal:.2f}")
