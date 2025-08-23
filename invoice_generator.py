@@ -181,16 +181,6 @@ def append_to_google_sheet(rows):
         current_user = st.session_state["username"]
         current_user_location = config["credentials"]["usernames"][current_user].get("location", "")
 
-        rows_with_location = []
-        for row in rows:
-            row_with_loc = row + [current_user_location]
-            rows_with_location.append(row_with_loc)
-
-        worksheet.append_rows(rows_with_location, value_input_option="USER_ENTERED")
-
-    except Exception as e:
-        st.warning(f"⚠️ Failed to update Google Sheet: {e}")
-
 # ------------------------
 # Invoice Creation
 # ------------------------
