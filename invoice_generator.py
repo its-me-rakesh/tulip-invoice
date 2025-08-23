@@ -574,8 +574,8 @@ if is_admin or is_master:
         start_date = st.sidebar.date_input("📅 Start Date", value=None)
         end_date = st.sidebar.date_input("📅 End Date", value=None)
     
-        # Apply filters
-        filtered_df["date"] = pd.to_datetime(filtered_df["date"], dayfirst=True, errors="coerce")
+# Apply filters
+        filtered_df = df.copy()
     
         if stall_filter:
             filtered_df = filtered_df[filtered_df["Stall No"].isin(stall_filter)]
@@ -584,28 +584,32 @@ if is_admin or is_master:
         if status_filter:
             filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
         if start_date:
-            start_date = pd.to_datetime(start_date)
-            filtered_df = filtered_df[filtered_df["date"] >= start_date]
-        
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= pd.to_datetime(start_date)]
         if end_date:
-            end_date = pd.to_datetime(end_date)
-            filtered_df = filtered_df[filtered_df["date"] <= end_date]
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= pd.to_datetime(end_date)]
+    
+        # Show live preview in sidebar (optional)
+        st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
+    
+        # Export as Excel or CSV
+        export_format = st.sidebar.radio("📁 Export Format", ["Excel", "CSV"], horizontal=True)
+        export_filename = f"invoices_export.{ 'xlsx' if export_format == 'Excel' else 'csv' }"
+    
+        if export_format == "Excel":
+            from io import BytesIO
+            import openpyxl
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                filtered_df.to_excel(writer, index=False, sheet_name='Invoices')
+            output.seek(0)
+            st.sidebar.download_button("📤 Export Filtered", data=output, file_name=export_filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        else:
+            csv = filtered_df.to_csv(index=False).encode('utf-8')
+            st.sidebar.download_button("📤 Export Filtered", data=csv, file_name=export_filename, mime="text/csv")
+    else:
+        st.sidebar.info("No data available for filtering/export.")
 
 
-# Show live preview in sidebar (optional)
-st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
-
-# Sidebar: show filtered row count
-st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
-
-# Sidebar: CSV download
-csv = filtered_df.to_csv(index=False).encode("utf-8")
-st.sidebar.download_button(
-    "📤 Download Filtered Data (CSV)",
-    data=csv,
-    file_name="invoices_export.csv",
-    mime="text/csv"
-)
 
 
 #Footer
