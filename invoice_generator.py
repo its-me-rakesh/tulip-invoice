@@ -154,7 +154,6 @@ def get_google_sheet():
 
 
 @st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
-@st.cache_data(ttl=300, show_spinner="Loading data from Google Sheets...")
 def fetch_sheet_df():
     try:
         worksheet = get_google_sheet()
