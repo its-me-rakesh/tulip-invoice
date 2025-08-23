@@ -705,29 +705,7 @@ if is_master:
         users_data.append([uname, details["name"], details["role"], details.get("location", "—")])
     st.table(pd.DataFrame(users_data, columns=["Username", "Name", "Role", "Location"]))
 
-    st.markdown("### ❌ Delete Existing User")
-
-    with st.form("delete_user_form"):
-        existing_users = list(config["credentials"]["usernames"].keys())
-        selected_user_to_delete = st.selectbox("Select User to Delete", existing_users)
     
-        confirm_delete = st.checkbox(f"Yes, delete user '{selected_user_to_delete}' permanently")
-        delete_btn = st.form_submit_button("Delete User")
-    
-        if delete_btn:
-            if confirm_delete:
-                # Prevent master from deleting themselves
-                if config["credentials"]["usernames"][selected_user_to_delete]["role"] == "master":
-                    st.error("🚫 Master user cannot be deleted.")
-                else:
-                    del config["credentials"]["usernames"][selected_user_to_delete]
-                    update_config_on_github(config)
-                    st.success(f"✅ User '{selected_user_to_delete}' has been deleted.")
-                    st.rerun()
-            else:
-                st.warning("Please confirm deletion before proceeding.")
-
-
     st.markdown("---")
     st.markdown("### 🔐 Reset or Change User Password")
 
@@ -772,6 +750,27 @@ if is_master:
                     yaml.safe_dump(config, f, sort_keys=False)
                 update_config_on_github(config)
                 st.success(f"✅ Password for user '{selected_user2}' has been updated.")
+    st.markdown("### ❌ Delete Existing User")
+
+    with st.form("delete_user_form"):
+        existing_users = list(config["credentials"]["usernames"].keys())
+        selected_user_to_delete = st.selectbox("Select User to Delete", existing_users)
+    
+        confirm_delete = st.checkbox(f"Yes, delete user '{selected_user_to_delete}' permanently")
+        delete_btn = st.form_submit_button("Delete User")
+    
+        if delete_btn:
+            if confirm_delete:
+                # Prevent master from deleting themselves
+                if config["credentials"]["usernames"][selected_user_to_delete]["role"] == "master":
+                    st.error("🚫 Master user cannot be deleted.")
+                else:
+                    del config["credentials"]["usernames"][selected_user_to_delete]
+                    update_config_on_github(config)
+                    st.success(f"✅ User '{selected_user_to_delete}' has been deleted.")
+                    st.rerun()
+            else:
+                st.warning("Please confirm deletion before proceeding.")
 
     st.markdown("---")
     st.markdown("### ➕ Create New User")
