@@ -15,7 +15,6 @@ import os
 import bcrypt
 import requests
 import base64
-import os
 
 gcp_service_account = st.secrets["gcp_service_account"]
 GITHUB_TOKEN = st.secrets["GITHUB_TOKEN"]
@@ -136,8 +135,6 @@ st.title("Shilp Samagam Mela Invoicing System")
 # Google Sheet Utils
 # ------------------------
 from google.oauth2.service_account import Credentials
-import gspread
-
 def get_google_sheet():
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
@@ -216,7 +213,7 @@ invoice_no = ""
 inv_numeric = 1
 all_df = fetch_sheet_df()
 if billing_counter and not all_df.empty:
-    df_counter = all_df[all_df["Invoice No"].astype(str).astype(str).str.startswith(billing_counter)]
+    df_counter = all_df[all_df["Invoice No"].astype(str).str.startswith(billing_counter)]
     if not df_counter.empty:
         last = df_counter["Invoice No"].astype(str).str.extract(rf"{billing_counter}_INV(\d+)")[0].dropna().astype(int).max()
         inv_numeric = last + 1
@@ -339,10 +336,8 @@ if st.button("🧾 Generate Invoice", disabled=generate_disabled):
     rows = [[
         stall_no, invoice_no, date, ph_no, payment_method, artisan_code,
         it["item"], it["qty"], it["price"], it["total"],
-        it["discount_percent"],  # Per-item discount
-        it["final_total"],       # Final total after discount
-        grand_total,
-        "Active"
+        it["discount_percent"], it["final_total"], grand_total,
+        "Active", current_user_location
     ] for it in items]
 
 
@@ -462,7 +457,6 @@ if is_admin or is_master:
 # ------------------------
 # User Management (master only)
 # ------------------------
-import streamlit_authenticator as stauth
 
 if is_master:
     st.subheader("👤 User Management")
@@ -523,7 +517,7 @@ if is_master:
             elif selected_role == "master":
                 # Verify current password using bcrypt
                 stored_hash = config['credentials']['usernames'][selected_user]['password']
-                if not bcrypt.checkpw(current_pass_input.encode(), stored_hash.encode()):
+                if not bcrypt.checkpw(current_pass_input.encode(), stored_hash.encode("utf-8")):
                     st.error("🚫 Incorrect current password.")
                 else:
                     hashed_pass = stauth.Hasher([new_pass]).generate()[0]
