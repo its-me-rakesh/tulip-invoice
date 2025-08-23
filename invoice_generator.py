@@ -598,20 +598,20 @@ st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
 # Export as Excel or CSV
 export_format = st.sidebar.radio("📁 Export Format", ["Excel", "CSV"], horizontal=True)
 export_filename = f"invoices_export.{ 'xlsx' if export_format == 'Excel' else 'csv' }"
-    
-        if export_format == "Excel":
-            from io import BytesIO
-            import openpyxl
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                filtered_df.to_excel(writer, index=False, sheet_name='Invoices')
-            output.seek(0)
-            st.sidebar.download_button("📤 Export Filtered", data=output, file_name=export_filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        else:
-            csv = filtered_df.to_csv(index=False).encode('utf-8')
-            st.sidebar.download_button("📤 Export Filtered", data=csv, file_name=export_filename, mime="text/csv")
-    else:
-        st.sidebar.info("No data available for filtering/export.")
+
+if export_format == "Excel":
+    from io import BytesIO
+    import openpyxl
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        filtered_df.to_excel(writer, index=False, sheet_name='Invoices')
+    output.seek(0)
+    st.sidebar.download_button("📤 Export Filtered", data=output, file_name=export_filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+else:
+    csv = filtered_df.to_csv(index=False).encode('utf-8')
+    st.sidebar.download_button("📤 Export Filtered", data=csv, file_name=export_filename, mime="text/csv")
+else:
+st.sidebar.info("No data available for filtering/export.")
 
 
 
