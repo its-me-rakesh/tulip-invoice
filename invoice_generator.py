@@ -622,8 +622,6 @@ if is_master:
 
     if st.button("Save Location"):
         config["credentials"]["usernames"][selected_user]["location"] = location_input
-        with open("config.yaml", "w") as f:
-            yaml.safe_dump(config, f, sort_keys=False)
         update_config_on_github(config)
         st.success(f"Location '{location_input}' assigned to '{selected_user}'")
         st.rerun()
@@ -667,18 +665,14 @@ if is_master:
                 else:
                     hashed_pass = stauth.Hasher([new_pass]).generate()[0]
                     config["credentials"]["usernames"][selected_user2]["password"] = hashed_pass
-                    with open("config.yaml", "w") as f:
-                        yaml.safe_dump(config, f, sort_keys=False)
                     update_config_on_github(config)
-                    st.success(f"✅ Password for master user '{selected_user2}' has been updated.")
+                    st.success(f"✅ Password for master user '{selected_user}' has been updated.")
                     st.rerun()
             else:
                 hashed_pass = stauth.Hasher([new_pass]).generate()[0]
                 config["credentials"]["usernames"][selected_user2]["password"] = hashed_pass
-                with open("config.yaml", "w") as f:
-                    yaml.safe_dump(config, f, sort_keys=False)
                 update_config_on_github(config)
-                st.success(f"✅ Password for user '{selected_user2}' has been updated.")
+                st.success(f"✅ Password for user '{selected_user}' has been updated.")
 
     st.markdown("---")
     st.markdown("### ➕ Create New User")
@@ -704,12 +698,8 @@ if is_master:
                     "password": hashed_password,
                     "role": new_role,
                 }
-                with open("config.yaml", "w") as f:
-                    yaml.safe_dump(config, f, sort_keys=False)
                 update_config_on_github(config)
-                st.success(
-                    f"✅ User '{new_username}' with role '{new_role}' created successfully."
-                )
+                st.success(f"✅ User '{new_username}' with role '{new_role}' created successfully.")
                 st.rerun()
 
 
