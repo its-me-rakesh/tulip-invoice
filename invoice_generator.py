@@ -40,22 +40,8 @@ CONFIG_FILE_PATH = st.secrets.get("CONFIG_FILE_PATH", "config.yaml")
 # =====================
 @st.cache_data(show_spinner=False)
 def load_config():
-    import requests, base64
-
-    def load_config_from_github():
-        github_token = st.secrets["GITHUB_TOKEN"]
-        repo = st.secrets["GITHUB_REPO"]
-        config_path = st.secrets["CONFIG_FILE_PATH"]
-    
-        url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
-        headers = {"Authorization": f"token {github_token}"}
-        r = requests.get(url, headers=headers)
-        r.raise_for_status()
-        file_info = r.json()
-        content = base64.b64decode(file_info["content"]).decode()
-        return yaml.safe_load(content)
-    
-    config = load_config_from_github()
+    with open("config.yaml", "r") as f:
+        return yaml.safe_load(f)
 
 
 def update_config_on_github(updated_config: dict):
@@ -87,8 +73,17 @@ def update_config_on_github(updated_config: dict):
     except Exception as e:
         st.error(f"❌ Failed to update config on GitHub: {e}")
 
+
 # Load config
 config = load_config()
+
+# Authenticator
+authenticator = stauth.Authenticate(
+    config["credentials"],
+    config["cookie"]["name"],
+    config["cookie"]["key"],
+    config["cookie"]["expiry_days"],
+)
 
 # =====================
 # 4) Header & Login
@@ -469,7 +464,7 @@ if is_admin or is_master:
                 grand_total_sel = float(invoice_items[0]["Final Total (Invoice)"])
 
                 # Temporarily override global-like vars for drawing
-                invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
+                global invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
                 invoice_no_bkp, stall_no_bkp, date_bkp, ph_bkp, art_bkp, pm_bkp, items_bkp = (
                     invoice_no,
                     stall_no,
@@ -627,6 +622,8 @@ if is_master:
 
     if st.button("Save Location"):
         config["credentials"]["usernames"][selected_user]["location"] = location_input
+        with open("config.yaml", "w") as f:
+            yaml.safe_dump(config, f, sort_keys=False)
         update_config_on_github(config)
         st.success(f"Location '{location_input}' assigned to '{selected_user}'")
         st.rerun()
@@ -670,14 +667,18 @@ if is_master:
                 else:
                     hashed_pass = stauth.Hasher([new_pass]).generate()[0]
                     config["credentials"]["usernames"][selected_user2]["password"] = hashed_pass
+                    with open("config.yaml", "w") as f:
+                        yaml.safe_dump(config, f, sort_keys=False)
                     update_config_on_github(config)
-                    st.success(f"✅ Password for master user '{selected_user}' has been updated.")
+                    st.success(f"✅ Password for master user '{selected_user2}' has been updated.")
                     st.rerun()
             else:
                 hashed_pass = stauth.Hasher([new_pass]).generate()[0]
                 config["credentials"]["usernames"][selected_user2]["password"] = hashed_pass
+                with open("config.yaml", "w") as f:
+                    yaml.safe_dump(config, f, sort_keys=False)
                 update_config_on_github(config)
-                st.success(f"✅ Password for user '{selected_user}' has been updated.")
+                st.success(f"✅ Password for user '{selected_user2}' has been updated.")
 
     st.markdown("---")
     st.markdown("### ➕ Create New User")
@@ -703,8 +704,12 @@ if is_master:
                     "password": hashed_password,
                     "role": new_role,
                 }
+                with open("config.yaml", "w") as f:
+                    yaml.safe_dump(config, f, sort_keys=False)
                 update_config_on_github(config)
-                st.success(f"✅ User '{new_username}' with role '{new_role}' created successfully.")
+                st.success(
+                    f"✅ User '{new_username}' with role '{new_role}' created successfully."
+                )
                 st.rerun()
 
 
