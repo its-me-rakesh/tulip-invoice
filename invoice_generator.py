@@ -252,7 +252,7 @@ billing_counter = st.text_input("Counter Name (e.g. MAIN)").strip().upper()
 st.subheader("2. Company & Invoice Details")
 col1, col2 = st.columns(2)
 with col1:
-    corporation = st.selectbox("Corporation", ["NBCFDC", "NSFDC", "NSKFDC"])
+    Corporation = st.selectbox("Corporation", ["NBCFDC", "NSFDC", "NSKFDC"])
     stall_no = st.text_input("Stall Number")
     artisan_code = st.text_input("Artisan Code")
 with col2:
