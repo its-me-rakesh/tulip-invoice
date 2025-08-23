@@ -592,14 +592,12 @@ if is_admin or is_master:
             filtered_df = filtered_df[filtered_df["Date"] <= end_date]
 
 
+    # Show live preview in sidebar (optional)
+    st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
 
-    
-        # Show live preview in sidebar (optional)
-        st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
-    
-        # Export as Excel or CSV
-        export_format = st.sidebar.radio("📁 Export Format", ["Excel", "CSV"], horizontal=True)
-        export_filename = f"invoices_export.{ 'xlsx' if export_format == 'Excel' else 'csv' }"
+    # Export as Excel or CSV
+    export_format = st.sidebar.radio("📁 Export Format", ["Excel", "CSV"], horizontal=True)
+    export_filename = f"invoices_export.{ 'xlsx' if export_format == 'Excel' else 'csv' }"
     
         if export_format == "Excel":
             from io import BytesIO
