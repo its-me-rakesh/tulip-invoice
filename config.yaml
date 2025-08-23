@@ -15,7 +15,7 @@ credentials:
       role: admin
       location: Pune
     tulip:
-      location: Mumbai
+      location: Pune
       name: Tulip
       password: $2b$12$xtNDq.phIfDfCL/6DpmQ9u/76xDF3MicK5sPltwh6ZFQmfWQxyY6G
       role: master
