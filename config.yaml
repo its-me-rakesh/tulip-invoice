@@ -9,11 +9,6 @@ credentials:
       name: admin1
       password: $2b$12$XLJUl8l4YFf3gLN2b03P.uh67KxhIf4LyTVHMsy/oU9ODnLNmaNqO
       role: admin
-    demo:
-      name: demo
-      password: $2b$12$.Gf3PqUEfuG4x6qL8mZfh.clgvQO4EVgwQV03rgQYbn9sDWGzWT0q
-      role: admin
-      location: Pune
     tulip:
       location: Pune
       name: Tulip
