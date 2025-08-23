@@ -575,7 +575,7 @@ if is_admin or is_master:
         end_date = st.sidebar.date_input("📅 End Date", value=None)
     
         # Apply filters
-        filtered_df["Date"] = pd.to_datetime(filtered_df["Date"], dayfirst=True, errors="coerce")
+        filtered_df["date"] = pd.to_datetime(filtered_df["date"], dayfirst=True, errors="coerce")
     
         if stall_filter:
             filtered_df = filtered_df[filtered_df["Stall No"].isin(stall_filter)]
@@ -585,11 +585,11 @@ if is_admin or is_master:
             filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
         if start_date:
             start_date = pd.to_datetime(start_date)
-            filtered_df = filtered_df[filtered_df["Date"] >= start_date]
+            filtered_df = filtered_df[filtered_df["date"] >= start_date]
         
         if end_date:
             end_date = pd.to_datetime(end_date)
-            filtered_df = filtered_df[filtered_df["Date"] <= end_date]
+            filtered_df = filtered_df[filtered_df["date"] <= end_date]
 
 
 # Show live preview in sidebar (optional)
