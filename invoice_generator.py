@@ -180,6 +180,8 @@ def append_to_google_sheet(rows):
         # Add location for each row based on logged-in user
         current_user = st.session_state["username"]
         current_user_location = config["credentials"]["usernames"][current_user].get("location", "")
+    except Exception as e:
+        st.warning(f"⚠️ Failed to update Google Sheet: {e}")
 
 # ------------------------
 # Invoice Creation
