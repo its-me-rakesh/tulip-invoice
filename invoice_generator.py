@@ -607,9 +607,9 @@ if export_format == "Excel":
         filtered_df.to_excel(writer, index=False, sheet_name='Invoices')
     output.seek(0)
     st.sidebar.download_button("📤 Export Filtered", data=output, file_name=export_filename, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-else:
-    csv = filtered_df.to_csv(index=False).encode('utf-8')
-    st.sidebar.download_button("📤 Export Filtered", data=csv, file_name=export_filename, mime="text/csv")
+    else:
+        csv = filtered_df.to_csv(index=False).encode('utf-8')
+        st.sidebar.download_button("📤 Export Filtered", data=csv, file_name=export_filename, mime="text/csv")
 else:
 st.sidebar.info("No data available for filtering/export.")
 
