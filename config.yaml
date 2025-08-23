@@ -5,7 +5,7 @@ cookie:
 credentials:
   usernames:
     admin1:
-      location: Pune
+      location: Kota
       name: admin1
       password: $2b$12$XLJUl8l4YFf3gLN2b03P.uh67KxhIf4LyTVHMsy/oU9ODnLNmaNqO
       role: admin
@@ -13,7 +13,7 @@ credentials:
       name: demo
       password: $2b$12$.Gf3PqUEfuG4x6qL8mZfh.clgvQO4EVgwQV03rgQYbn9sDWGzWT0q
       role: admin
-      location: kota
+      location: Pune
     tulip:
       location: Mumbai
       name: Tulip
