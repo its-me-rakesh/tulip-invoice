@@ -86,6 +86,7 @@ def update_config_on_github(updated_config: dict):
         st.success("✅ Config updated on GitHub.")
     except Exception as e:
         st.error(f"❌ Failed to update config on GitHub: {e}")
+    st.write("DEBUG: Loaded config:", config)
 
 
 # Load config
