@@ -252,13 +252,14 @@ billing_counter = st.text_input("Counter Name (e.g. MAIN)").strip().upper()
 st.subheader("2. Company & Invoice Details")
 col1, col2 = st.columns(2)
 with col1:
+    corporation = st.selectbox("Corporation", ["NBCFDC", "NSFDC", "NSKFDC"])
     stall_no = st.text_input("Stall Number")
     artisan_code = st.text_input("Artisan Code")
 with col2:
     date_str = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI", "Card"])
-    corporation = st.selectbox("Corporation", ["NBCFDC", "NSFDC", "NSKFDC"])
+    
 
 # Invoice number generation
 invoice_no = ""
@@ -435,7 +436,7 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
             it["final_total"],
             grand_total,
             "Active",
-            "Corporation"
+            Corporation,
         ]
         for it in items
     ]
