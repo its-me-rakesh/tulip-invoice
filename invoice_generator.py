@@ -43,46 +43,87 @@ def load_config():
     with open("config.yaml", "r") as f:
         return yaml.safe_load(f)
 
-
-def update_config_on_github(updated_config: dict):
-    """Commit config.yaml changes to GitHub via REST API."""
+def push_config_to_github():
+    """Pushes the updated config.yaml to the GitHub repo."""
     try:
+        # Load GitHub token and repo from Streamlit secrets
+        token = st.secrets["GITHUB_TOKEN"]
+        repo_name = st.secrets["GITHUB_REPO"]
+        config_file_path = st.secrets["CONFIG_FILE_PATH"]
+
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+
+        # Read the local config.yaml
+        with open(config_file_path, "r") as f:
+            updated_content = f.read()
+
+        # Get current file from repo
+        contents = repo.get_contents(config_file_path)
+
+        # Update the file in GitHub
+        repo.update_file(
+            path=config_file_path,
+            message="Update config.yaml via Streamlit app",
+            content=updated_content,
+            sha=contents.sha
+        )
+        st.success("✅ Config file successfully updated in GitHub.")
+    except Exception as e:
+        st.error(f"❌ Failed to update config.yaml in GitHub: {e}")
+
+def update_config_on_github(updated_config):
+    try:
+        # Read secrets
+        github_token = st.secrets["GITHUB_TOKEN"]
         repo = st.secrets["GITHUB_REPO"]
         config_path = st.secrets["CONFIG_FILE_PATH"]
-        token = st.secrets["GITHUB_TOKEN"]
 
-        # Get current file SHA
+        # Get the file from GitHub (to fetch SHA for update)
         get_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
-        headers = {"Authorization": f"token {token}"}
+        headers = {"Authorization": f"token {github_token}"}
         r = requests.get(get_url, headers=headers)
         r.raise_for_status()
-        sha = r.json()["sha"]
+        file_info = r.json()
+        sha = file_info["sha"]
 
+        # Convert updated config dict to YAML
+        import yaml
         yaml_content = yaml.dump(updated_config, sort_keys=False)
-        encoded = base64.b64encode(yaml_content.encode()).decode()
 
+        # Encode to Base64
+        encoded_content = base64.b64encode(yaml_content.encode()).decode()
+
+        # Prepare commit payload
+        commit_message = "Update config.yaml from Streamlit app"
         payload = {
-            "message": "Update config.yaml from Streamlit app",
-            "content": encoded,
+            "message": commit_message,
+            "content": encoded_content,
             "sha": sha,
-            "branch": "main",
+            "branch": "main"  # Change if your default branch is different
         }
-        put_response = requests.put(get_url, headers=headers, json=payload)
+
+        # Send PUT request to GitHub API to update file
+        put_url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
+        put_response = requests.put(put_url, headers=headers, json=payload)
         put_response.raise_for_status()
-        st.success("✅ Config updated on GitHub.")
+
+        st.success("✅ Config updated on GitHub successfully!")
+        st.rerun()
+
     except Exception as e:
         st.error(f"❌ Failed to update config on GitHub: {e}")
 
-
-# Load config
-config = load_config()
-
 # Authenticator
+# ------------------------
+with open("config.yaml") as file:
+    config = yaml.safe_load(file)
+
 authenticator = stauth.Authenticate(
-    config["credentials"],
-    config["cookie"]["name"],
-    config["cookie"]["key"],
-    config["cookie"]["expiry_days"],
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days']
 )
 
 # =====================
