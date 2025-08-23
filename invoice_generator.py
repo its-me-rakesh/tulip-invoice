@@ -35,8 +35,12 @@ def push_config_to_github():
         repo = g.get_repo(repo_name)
 
         # Read the local config.yaml
-        with open(config_file_path, "r") as f:
-            updated_content = f.read()
+        try:
+            with open("config.yaml", "r") as file:
+                config = yaml.safe_load(file)
+        except FileNotFoundError:
+            st.error("⚠️ Missing config.yaml. Please upload or sync from GitHub.")
+            st.stop()
 
         # Get current file from repo
         contents = repo.get_contents(config_file_path)
@@ -580,9 +584,13 @@ if is_admin or is_master:
         if status_filter:
             filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
         if start_date:
-            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= pd.to_datetime(start_date)]
+            start_date = pd.to_datetime(start_date)
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= start_date]
+        
         if end_date:
-            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= pd.to_datetime(end_date)]
+            end_date = pd.to_datetime(end_date)
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= end_date]
+
     
         # Show live preview in sidebar (optional)
         st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
