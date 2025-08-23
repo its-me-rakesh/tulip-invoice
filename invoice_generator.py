@@ -584,9 +584,13 @@ if is_admin or is_master:
         if status_filter:
             filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
         if start_date:
-            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= pd.to_datetime(start_date)]
+            start_date = pd.to_datetime(start_date)
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) >= start_date]
+        
         if end_date:
-            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= pd.to_datetime(end_date)]
+            end_date = pd.to_datetime(end_date)
+            filtered_df = filtered_df[pd.to_datetime(filtered_df["Date"], dayfirst=True) <= end_date]
+
 
     
         # Show live preview in sidebar (optional)
