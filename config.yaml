@@ -13,7 +13,7 @@ credentials:
       name: demo
       password: $2b$12$.Gf3PqUEfuG4x6qL8mZfh.clgvQO4EVgwQV03rgQYbn9sDWGzWT0q
       role: admin
-      location: kota
+      location: Pune
     tulip:
       location: Mumbai
       name: Tulip
