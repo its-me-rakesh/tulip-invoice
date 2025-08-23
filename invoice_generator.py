@@ -218,6 +218,7 @@ def append_to_google_sheet(rows: list[list]):
             "Final Total (Invoice)",
             "Status",
             "Location",
+            "Corporation"
         ]
         # Insert header if sheet empty
         if not worksheet.row_values(1):
@@ -257,6 +258,7 @@ with col2:
     date_str = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI", "Card"])
+    corporation = st.selectbox("Corporation", ["NBCFDC", "NSFDC", "NSKFDC"])
 
 # Invoice number generation
 invoice_no = ""
@@ -433,6 +435,7 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
             it["final_total"],
             grand_total,
             "Active",
+            "Corporation"
         ]
         for it in items
     ]
@@ -644,6 +647,31 @@ if is_admin or is_master:
                 ),
                 use_container_width=True,
             )
+                        # 🔹 Revenue by Payment Method
+            st.plotly_chart(
+                px.bar(
+                    df.groupby("Payment Method")["Final Total (Item)"].sum().reset_index(),
+                    x="Payment Method",
+                    y="Final Total (Item)",
+                    title="Revenue by Payment Method",
+                    color_discrete_sequence=["#1f77b4"]
+                ),
+                use_container_width=True
+            )
+
+            # 🔹 Revenue by Corporation
+            if "Corporation" in df.columns:
+                st.plotly_chart(
+                    px.bar(
+                        df.groupby("Corporation")["Final Total (Item)"].sum().reset_index(),
+                        x="Corporation",
+                        y="Final Total (Item)",
+                        title="Revenue by Corporation",
+                        color_discrete_sequence=["#2ca02c"]
+                    ),
+                    use_container_width=True
+                )
+
         else:
             st.info("No sales data found.")
 
@@ -763,6 +791,9 @@ if is_admin or is_master:
 
     if not df.empty:
         # ---- Filters ----
+        corp_filter = st.sidebar.multiselect(
+            "🏢 Corporation", sorted(df["Corporation"].unique())
+        )
         stall_filter = st.sidebar.multiselect(
             "🔎 Filter by Stall No", sorted(df["Stall No"].dropna().unique())
         )
@@ -783,7 +814,8 @@ if is_admin or is_master:
             filtered_df["Date"] = pd.to_datetime(
                 filtered_df["Date"], dayfirst=True, errors="coerce"
             )
-
+        if corp_filter:
+            filtered_df = filtered_df[filtered_df["Corporation"].isin(corp_filter)]
         if stall_filter:
             filtered_df = filtered_df[filtered_df["Stall No"].isin(stall_filter)]
         if payment_filter:
