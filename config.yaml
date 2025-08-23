@@ -5,7 +5,7 @@ cookie:
 credentials:
   usernames:
     admin1:
-      location: Mumbai
+      location: Pune
       name: admin1
       password: $2b$12$XLJUl8l4YFf3gLN2b03P.uh67KxhIf4LyTVHMsy/oU9ODnLNmaNqO
       role: admin
