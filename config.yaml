@@ -5,7 +5,7 @@ cookie:
 credentials:
   usernames:
     admin1:
-      location: Kota
+      location: Pune
       name: admin1
       password: $2b$12$XLJUl8l4YFf3gLN2b03P.uh67KxhIf4LyTVHMsy/oU9ODnLNmaNqO
       role: admin
@@ -20,7 +20,7 @@ credentials:
       password: $2b$12$xtNDq.phIfDfCL/6DpmQ9u/76xDF3MicK5sPltwh6ZFQmfWQxyY6G
       role: master
     user1:
-      location: Pune
+      location: Kota
       name: Rakesh
       password: $2b$12$2YtN.vfe1aPWy.nCANPzVepMU0HWxOr78ju/hzPQeguA0GEX75Kzi
       role: user
