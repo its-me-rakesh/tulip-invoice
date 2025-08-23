@@ -595,19 +595,17 @@ if is_admin or is_master:
 # Show live preview in sidebar (optional)
 st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
 
-# Show filtered data in main area
-st.write(filtered_df)
+# Sidebar: show filtered row count
+st.sidebar.markdown(f"Showing **{len(filtered_df)}** filtered entries.")
 
-# CSV download button (main area)
+# Sidebar: CSV download
 csv = filtered_df.to_csv(index=False).encode("utf-8")
-st.download_button(
+st.sidebar.download_button(
     "📤 Download Filtered Data (CSV)",
     data=csv,
     file_name="invoices_export.csv",
     mime="text/csv"
 )
-
-
 
 
 #Footer
