@@ -464,7 +464,7 @@ if is_admin or is_master:
                 grand_total_sel = float(invoice_items[0]["Final Total (Invoice)"])
 
                 # Temporarily override global-like vars for drawing
-                global invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
+                invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
                 invoice_no_bkp, stall_no_bkp, date_bkp, ph_bkp, art_bkp, pm_bkp, items_bkp = (
                     invoice_no,
                     stall_no,
