@@ -210,7 +210,7 @@ with col1:
 with col2:
     date = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
-    payment_method = st.selectbox("Payment Method", ["Cash", "UPI"])
+    payment_method = st.selectbox("Payment Method", ["Cash", "UPI", "Card"])
 
 
 invoice_no = ""
