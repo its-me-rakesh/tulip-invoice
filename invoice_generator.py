@@ -40,8 +40,22 @@ CONFIG_FILE_PATH = st.secrets.get("CONFIG_FILE_PATH", "config.yaml")
 # =====================
 @st.cache_data(show_spinner=False)
 def load_config():
-    with open("config.yaml", "r") as f:
-        return yaml.safe_load(f)
+    import requests, base64
+
+    def load_config_from_github():
+        github_token = st.secrets["GITHUB_TOKEN"]
+        repo = st.secrets["GITHUB_REPO"]
+        config_path = st.secrets["CONFIG_FILE_PATH"]
+    
+        url = f"https://api.github.com/repos/{repo}/contents/{config_path}"
+        headers = {"Authorization": f"token {github_token}"}
+        r = requests.get(url, headers=headers)
+        r.raise_for_status()
+        file_info = r.json()
+        content = base64.b64decode(file_info["content"]).decode()
+        return yaml.safe_load(content)
+    
+    config = load_config_from_github()
 
 
 def update_config_on_github(updated_config: dict):
