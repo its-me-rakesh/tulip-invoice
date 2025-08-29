@@ -28,6 +28,7 @@ credentials:
       name: User3
       password: $2b$12$8dFEsEwiQ9TFd3HNhurg/eSRqjCi26.SmFXabzwhanEcOLpvKNfU.
       role: user
+      location: Bhopal
     user4:
       name: User4
       password: $2b$12$61vgYkKainDFPu9E1KsNGuWmZagW9cLiGYYic9zUKijiQHmzEfSD.
