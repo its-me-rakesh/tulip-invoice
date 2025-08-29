@@ -19,7 +19,11 @@ credentials:
       name: Rakesh
       password: $2b$12$2YtN.vfe1aPWy.nCANPzVepMU0HWxOr78ju/hzPQeguA0GEX75Kzi
       role: user
-    User2:
+    user2:
       name: User2
       password: $2b$12$yXi73.06uvMgXO2mRqj8ku66dEB/xRIrTe.IX6FG.uJrR.zKvZA4O
+      role: user
+    User3:
+      name: User3
+      password: $2b$12$8dFEsEwiQ9TFd3HNhurg/eSRqjCi26.SmFXabzwhanEcOLpvKNfU.
       role: user
