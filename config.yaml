@@ -23,7 +23,11 @@ credentials:
       name: User2
       password: $2b$12$yXi73.06uvMgXO2mRqj8ku66dEB/xRIrTe.IX6FG.uJrR.zKvZA4O
       role: user
-    User3:
+    user3:
       name: User3
       password: $2b$12$8dFEsEwiQ9TFd3HNhurg/eSRqjCi26.SmFXabzwhanEcOLpvKNfU.
+      role: user
+    User4:
+      name: User4
+      password: $2b$12$61vgYkKainDFPu9E1KsNGuWmZagW9cLiGYYic9zUKijiQHmzEfSD.
       role: user
