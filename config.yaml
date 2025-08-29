@@ -33,3 +33,4 @@ credentials:
       name: User4
       password: $2b$12$61vgYkKainDFPu9E1KsNGuWmZagW9cLiGYYic9zUKijiQHmzEfSD.
       role: user
+      location: Kolkata
