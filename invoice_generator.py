@@ -367,6 +367,14 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.drawString(15, 70, f"Invoice No.: {invoice_no}")
     inv.drawString(15, 80, f"Date: {date_str}")
     inv.drawString(15, 90, f"Customer Ph No.: {ph_no}")
+    # ✅ GST Number (always printed if available)
+    gst_number = config.get("gst_number", "")
+    if gst_number:
+        inv.drawString(15, 100, f"GSTIN: {gst_number}")
+        start_y = 110  # shift items table down
+    else:
+        start_y = 100
+
 
     # Right column
     inv.drawString(140, 70, f"Stall No.: {stall_no}")
@@ -914,6 +922,18 @@ if is_admin or is_master:
         )
     else:
         st.sidebar.info("No data available for filtering/export.")
+# ---- GST Number (Master Only) ----
+if is_master:
+    current_gst = config.get("gst_number", "")
+    gst_input = st.text_input("GST Number", value=current_gst)
+
+    if st.button("Save GST Number"):
+        config["gst_number"] = gst_input
+        with open("config.yaml", "w") as f:
+            yaml.safe_dump(config, f, sort_keys=False)
+        update_config_on_github(config)
+        st.success(f"GST Number '{gst_input}' saved successfully.")
+        st.rerun()
 
 
 # =====================
