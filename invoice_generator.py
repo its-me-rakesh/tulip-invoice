@@ -220,8 +220,8 @@ def append_to_google_sheet(rows: list[list]):
             "GST%",
             "GST Amt",
             "Status",
-            "Location",
             "Corporation",
+            "Location",
         ]
 
         # Get current header row (strip blanks)
