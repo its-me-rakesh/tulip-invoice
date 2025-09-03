@@ -215,7 +215,7 @@ def append_to_google_sheet(rows: list[list]):
             "Price",
             "Total (Item)",
             "Discount%",
-            "Final Total (Artisan)",
+            "Final Total (Item)",
             "GST%",
             "GST Amt",
             "Final Total (Invoice)",   # GST-inclusive
@@ -629,15 +629,15 @@ if is_admin or is_master:
 
             st.markdown("### Summary Stats")
             col1, col2, col3 = st.columns(3)
-            col1.metric("Total Revenue", f"₹{df['Final Total (Artisan)'].sum():,.2f}")
+            col1.metric("Total Revenue", f"₹{df['Final Total (Item)'].sum():,.2f}")
             col2.metric("Total Items Sold", int(df["Qty"].sum()))
             col3.metric("Total Invoices", df["Invoice No"].nunique())
 
             st.plotly_chart(
                 px.bar(
-                    df.groupby("Date")["Final Total (Artisan)"].sum().reset_index(),
+                    df.groupby("Date")["Final Total (Item)"].sum().reset_index(),
                     x="Date",
-                    y="Final Total (Artisan)",
+                    y="Final Total (Item)",
                     title="Revenue Over Time",
                     color_discrete_sequence=["green"],
                 ),
@@ -655,9 +655,9 @@ if is_admin or is_master:
             )
             st.plotly_chart(
                 px.bar(
-                    df.groupby("Stall No")["Final Total (Artisan)"].sum().sort_values(ascending=False).reset_index(),
+                    df.groupby("Stall No")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index(),
                     x="Stall No",
-                    y="Final Total (Artisan)",
+                    y="Final Total (Item)",
                     title="Stall-wise Revenue",
                     color_discrete_sequence=["#FF0000"],
                 ),
@@ -685,12 +685,12 @@ if is_admin or is_master:
                 use_container_width=True,
             )
             rev_items = (
-                df.groupby("Item")["Final Total (Artisan)"].sum().sort_values(ascending=False).reset_index()
+                df.groupby("Item")["Final Total (Item)"].sum().sort_values(ascending=False).reset_index()
             )
             st.plotly_chart(
                 px.pie(
                     rev_items.head(10),
-                    values="Final Total (Artisan)",
+                    values="Final Total (Item)",
                     names="Item",
                     title="Revenue Share by Item",
                 ),
@@ -699,9 +699,9 @@ if is_admin or is_master:
                         # 🔹 Revenue by Payment Method
             st.plotly_chart(
                 px.bar(
-                    df.groupby("Payment Method")["Final Total (Artisan)"].sum().reset_index(),
+                    df.groupby("Payment Method")["Final Total (Item)"].sum().reset_index(),
                     x="Payment Method",
-                    y="Final Total (Artisan)",
+                    y="Final Total (Item)",
                     title="Revenue by Payment Method",
                     color_discrete_sequence=["#1f77b4"]
                 ),
@@ -712,9 +712,9 @@ if is_admin or is_master:
             if "Corporation" in df.columns:
                 st.plotly_chart(
                     px.bar(
-                        df.groupby("Corporation")["Final Total (Artisan)"].sum().reset_index(),
+                        df.groupby("Corporation")["Final Total (Item)"].sum().reset_index(),
                         x="Corporation",
-                        y="Final Total (Artisan)",
+                        y="Final Total (Item)",
                         title="Revenue by Corporation",
                         color_discrete_sequence=["#2ca02c"]
                     ),
