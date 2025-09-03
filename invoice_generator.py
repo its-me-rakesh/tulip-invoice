@@ -199,10 +199,11 @@ def fetch_sheet_df() -> pd.DataFrame:
 
 
 def append_to_google_sheet(rows: list[list]):
-    """Append invoice rows, auto-inserting header & user location."""
+    """Append invoice rows, auto-inserting/upgrading header & user location."""
     try:
         worksheet = _get_google_sheet()
-        header = [
+        # Target header (includes GST)
+        target_header = [
             "Stall No",
             "Invoice No",
             "Date",
@@ -215,32 +216,46 @@ def append_to_google_sheet(rows: list[list]):
             "Total (Item)",
             "Discount%",
             "Final Total (Item)",
-            "Final Total (Invoice)",   # ✅ will be GST-inclusive
+            "Final Total (Invoice)",   # GST-inclusive
             "GST%",
             "GST Amt",
             "Status",
             "Location",
-            "Corporation"
+            "Corporation",
         ]
-        # Insert header if sheet empty
-        if not worksheet.row_values(1):
-            worksheet.insert_row(header, 1)
 
-        # Get current user's location from config
+        # Get current header row (strip blanks)
+        current_header = [h.strip() for h in worksheet.row_values(1)]
+        current_header = [h for h in current_header if h]  # remove empty strings
+
+        if not current_header:
+            # Sheet is empty → insert fresh header
+            worksheet.insert_row(target_header, 1)
+        else:
+            # If mismatch → rewrite header fully to avoid duplicates
+            if current_header != target_header:
+                worksheet.update("1:1", [target_header])
+
+        # Add location column from user profile
         current_user = st.session_state.get("username", "")
         location = (
             config["credentials"]["usernames"].get(current_user, {}).get("location", "")
         )
 
-        # Guarantee location column present per row
+        # Ensure each row matches header length
         rows_with_location = []
         for r in rows:
-            if len(r) == len(header) - 1:
-                rows_with_location.append(r + [location])
-            else:
-                rows_with_location.append(r)
+            full_row = r.copy()
+            # Fill GST% / GST Amt / Location if caller didn’t add
+            while len(full_row) < len(target_header):
+                if len(full_row) == target_header.index("Location"):
+                    full_row.append(location)
+                else:
+                    full_row.append("")
+            rows_with_location.append(full_row)
 
         worksheet.append_rows(rows_with_location, value_input_option="USER_ENTERED")
+
     except Exception as e:
         st.warning(f"⚠️ Failed to update Google Sheet: {e}")
 
