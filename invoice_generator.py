@@ -215,7 +215,9 @@ def append_to_google_sheet(rows: list[list]):
             "Total (Item)",
             "Discount%",
             "Final Total (Item)",
-            "Final Total (Invoice)",
+            "Final Total (Invoice)",   # ✅ will be GST-inclusive
+            "GST%",
+            "GST Amt",
             "Status",
             "Location",
             "Corporation"
@@ -259,6 +261,8 @@ with col2:
     date_str = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI", "Card"])
+    gst_percent = st.selectbox("GST Rate (%)", (0, 3, 5, 12, 18, 28), index=0)
+
     
 
 # Invoice number generation
@@ -309,7 +313,12 @@ for i in range(num_items):
         )
 
 subtotal = sum(it["final_total"] for it in items)
-st.markdown(f"### 🧾 Current Subtotal (After Discount): ₹ {subtotal:.2f}")
+gst_amount = subtotal * (gst_percent / 100.0)
+grand_total_incl_gst = subtotal + gst_amount
+
+st.markdown(f"### 🧾 Subtotal (After Discount): ₹ {subtotal:.2f}")
+st.markdown(f"### 🧮 GST ({gst_percent}%): ₹ {gst_amount:.2f}")
+st.markdown(f"## 💰 Total (GST Inclusive): ₹ {grand_total_incl_gst:.2f}")
 
 # =====================
 # 7) PDF Rendering Helper
@@ -318,7 +327,9 @@ st.markdown(f"### 🧾 Current Subtotal (After Discount): ₹ {subtotal:.2f}")
 def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     total_amount = totals["total_amount"]
     discount_amt = totals["discount_amt"]
-    grand_total = totals["grand_total"]
+    gst_percent = totals["gst_percent"]            
+    gst_amount = totals["gst_amount"]              
+    grand_total = totals["grand_total_incl_gst"]   
 
     inv.line(5, 45, 195, 45)
     inv.translate(10, 40)
@@ -366,9 +377,10 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
         y += 15
 
     inv.setFont("Times-Bold", 5)
-    inv.drawString(15, y + 10, f"Subtotal: {total_amount:.2f}")
-    inv.drawString(15, y + 20, f"Total Discount: {discount_amt:.2f}")
-    inv.drawString(140, y + 10, f"Grand Total: {grand_total:.2f}")
+    inv.drawString(15,  y + 10, f"Subtotal (After Discount): {subtotal:.2f}")
+    inv.drawString(15,  y + 20, f"Total Discount: {discount_amt:.2f}")
+    inv.drawString(15,  y + 30, f"GST ({gst_percent}%): {gst_amount:.2f}")
+    inv.drawString(140, y + 10, f"Grand Total (Incl GST): {grand_total:.2f}")
     inv.drawString(140, y + 60, "Tulip")
     inv.drawString(140, y + 68, "Signature")
 
@@ -394,13 +406,19 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
         st.error("Billing Counter and Stall Number are required.")
         st.stop()
 
-    total_amount = sum(it["total"] for it in items)
-    discount_amt = sum(it["total"] - it["final_total"] for it in items)
-    grand_total = sum(it["final_total"] for it in items)
+    total_amount = sum(it["total"] for it in items)                       # before discount
+    discount_amt = sum(it["total"] - it["final_total"] for it in items)   # discount value
+    subtotal_after_discount = sum(it["final_total"] for it in items)      # after discount
+    gst_amount_calc = subtotal_after_discount * (gst_percent / 100.0)
+    grand_total_incl_gst_calc = subtotal_after_discount + gst_amount_calc
+    
     totals = {
         "total_amount": total_amount,
         "discount_amt": discount_amt,
-        "grand_total": grand_total,
+        "subtotal": subtotal_after_discount,
+        "gst_percent": gst_percent,
+        "gst_amount": gst_amount_calc,
+        "grand_total_incl_gst": grand_total_incl_gst_calc,
     }
 
     buf = BytesIO()
@@ -434,13 +452,15 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
             it["total"],
             it["discount_percent"],
             it["final_total"],
-            grand_total,
+            grand_total_incl_gst_calc,  # ✅ store inclusive total
+            gst_percent,                 # ✅ GST%
+            gst_amount_calc,             # ✅ GST Amt
             "Active",
+            # Location is auto-added inside append_to_google_sheet()
             Corporation,
         ]
         for it in items
     ]
-
     append_to_google_sheet(rows)
     fetch_sheet_df.clear()
     _ = fetch_sheet_df()  # re-fetch
@@ -506,7 +526,14 @@ if is_admin or is_master:
                 discount_percent = float(invoice_items[0].get("Discount%", 0))
                 total_amount_sel = sum(it["total"] for it in items_copy)
                 discount_amt_sel = total_amount_sel * discount_percent / 100.0
-                grand_total_sel = float(invoice_items[0]["Final Total (Invoice)"])
+                subtotal_sel = total_amount_sel - discount_amt_sel
+                
+                # ✅ NEW: pull GST info if present; fallback to 0
+                gst_percent_sel = float(invoice_items[0].get("GST%", 0) or 0)
+                gst_amount_sel = float(invoice_items[0].get("GST Amt", 0) or 0)
+                
+                # ✅ The sheet's "Final Total (Invoice)" is GST-inclusive after our change
+                grand_total_sel = float(invoice_items[0].get("Final Total (Invoice)", subtotal_sel + gst_amount_sel) or (subtotal_sel + gst_amount_sel))
 
             
                 invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
@@ -539,6 +566,9 @@ if is_admin or is_master:
                         "total_amount": total_amount_sel,
                         "discount_amt": discount_amt_sel,
                         "grand_total": grand_total_sel,
+                        "gst_percent": gst_percent_sel,
+                        "gst_amount": gst_amount_sel,
+                        "grand_total_incl_gst": grand_total_sel,
                     },
                 )
                 pdf2.showPage()
@@ -549,6 +579,9 @@ if is_admin or is_master:
                         "total_amount": total_amount_sel,
                         "discount_amt": discount_amt_sel,
                         "grand_total": grand_total_sel,
+                        "gst_percent": gst_percent_sel,
+                        "gst_amount": gst_amount_sel,
+                        "grand_total_incl_gst": grand_total_sel,
                     },
                 )
                 pdf2.save(); buf2.seek(0)
