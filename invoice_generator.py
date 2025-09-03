@@ -216,9 +216,9 @@ def append_to_google_sheet(rows: list[list]):
             "Total (Item)",
             "Discount%",
             "Final Total (Item)",
-            "Final Total (Invoice)",   # GST-inclusive
             "GST%",
             "GST Amt",
+            "Final Total (Invoice)",   # GST-inclusive
             "Status",
             "Corporation",
             "Location",
