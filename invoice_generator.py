@@ -365,12 +365,12 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.setFont("Times-Bold", 4)
     # Left column
     inv.drawString(15, 70, f"Invoice No.: {invoice_no}")
-    inv.drawString(15, 80, f"Artisan Code: {artisan_code}")
-    inv.drawString(15, 90, f"Date: {date_str}")
+    inv.drawString(15, 80, f"Date: {date_str}")
+    inv.drawString(15, 90, f"Customer Ph No.: {ph_no}")
 
     # Right column
     inv.drawString(110, 70, f"Stall No.: {stall_no}")
-    inv.drawString(110, 80, f"Customer Ph No.: {ph_no}")
+    inv.drawString(110, 80, f"Artisan Code: {artisan_code}")
     inv.drawString(110, 90, f"Payment Method: {payment_method}")
 
     start_y = 100
