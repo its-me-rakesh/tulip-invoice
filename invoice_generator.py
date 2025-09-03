@@ -369,9 +369,9 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.drawString(15, 90, f"Customer Ph No.: {ph_no}")
 
     # Right column
-    inv.drawString(150, 70, f"Stall No.: {stall_no}")
-    inv.drawString(150, 80, f"Artisan Code: {artisan_code}")
-    inv.drawString(150, 90, f"Payment Method: {payment_method}")
+    inv.drawString(140, 70, f"Stall No.: {stall_no}")
+    inv.drawString(140, 80, f"Artisan Code: {artisan_code}")
+    inv.drawString(140, 90, f"Payment Method: {payment_method}")
 
     start_y = 100
     inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
