@@ -385,9 +385,9 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.setFont("Times-Bold", 4)
     inv.drawString(20,  start_y + 10, "S.No")
     inv.drawString(40,  start_y + 10, "Item")
-    inv.drawRightString(100, start_y + 10, "Price")
-    inv.drawRightString(120, start_y + 10, "Qty")
-    inv.drawRightString(140, start_y + 10, "GST %")
+    inv.drawRightString(60, start_y + 10, "Price")
+    inv.drawRightString(80, start_y + 10, "Qty")
+    inv.drawRightString(100, start_y + 10, "GST %")
     inv.drawRightString(170, start_y + 10, "Total")
 
 
@@ -399,9 +399,9 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     for it in items:
         inv.drawString(20,  y, it["s_no"])
         inv.drawString(40,  y, it["item"][:12])  # allow slightly longer names
-        inv.drawRightString(100, y, f"{it['price']:.2f}")
-        inv.drawRightString(120, y, str(it["qty"]))
-        inv.drawRightString(140, y, f"{it['gst_percent']}%")
+        inv.drawRightString(60, y, f"{it['price']:.2f}")
+        inv.drawRightString(80, y, str(it["qty"]))
+        inv.drawRightString(100, y, f"{it['gst_percent']}%")
         inv.drawRightString(170, y, f"{it['total']:.2f}")
         y += 12
  
@@ -409,9 +409,9 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
 
 
     inv.setFont("Times-Bold", 5)
-    inv.drawString(15, y + 10, f"Subtotal: {total_amount:.2f}")
-    inv.drawString(15, y + 20, f"Total Discount: {discount_amt:.2f}")
-    inv.drawString(140, y + 10, f"Grand Total: {grand_total:.2f}")
+    inv.drawString(15, y + 15, f"Subtotal: {total_amount:.2f}")
+    inv.drawString(15, y + 30, f"Total Discount: {discount_amt:.2f}")
+    inv.drawString(140, y + 15, f"Grand Total: {grand_total:.2f}")
     inv.drawString(140, y + 60, "Tulip")
     inv.drawString(140, y + 68, "Signature")
 
