@@ -413,10 +413,10 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
         y += 15
 
     inv.setFont("Times-Bold", 4)
-    inv.drawString(140,  y + 20, f"Subtotal (After Discount): {subtotal:.2f}")
+    inv.drawString(120,  y + 20, f"Subtotal (After Discount): {subtotal:.2f}")
     inv.drawString(15,  y + 20, f"Total Discount: {discount_amt:.2f}")
     inv.drawString(15,  y + 30, f"GST (Total): {gst_amount:.2f}")                   # ✅ no single %
-    inv.drawString(140,  y + 30, f"Grand Total (Incl GST): {grand_total:.2f}")
+    inv.drawString(120,  y + 30, f"Grand Total (Incl GST): {grand_total:.2f}")
     inv.drawString(140, y + 60, "Tulip")
     inv.drawString(140, y + 68, "Signature")
 
