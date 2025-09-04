@@ -417,8 +417,8 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.drawString(15,  y + 20, f"Total Discount: {discount_amt:.2f}")
     inv.drawString(15,  y + 30, f"GST (Total): {gst_amount:.2f}")                   # ✅ no single %
     inv.drawString(120,  y + 30, f"Grand Total (Incl GST): {grand_total:.2f}")
-    inv.drawString(140, y + 60, "Tulip")
-    inv.drawString(140, y + 68, "Signature")
+    inv.drawString(15, y + 60, "Tulip")
+    inv.drawString(15, y + 70, "Signature")
 
 
 # =====================
