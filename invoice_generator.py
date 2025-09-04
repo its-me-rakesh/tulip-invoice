@@ -199,10 +199,10 @@ def fetch_sheet_df() -> pd.DataFrame:
 
 
 def append_to_google_sheet(rows: list[list]):
-    """Append invoice rows, auto-inserting/upgrading header & user location."""
+    """Append invoice rows with robust header handling & user location."""
     try:
         worksheet = _get_google_sheet()
-        # Target header (includes GST)
+        # Required headers
         target_header = [
             "Stall No",
             "Invoice No",
@@ -215,38 +215,36 @@ def append_to_google_sheet(rows: list[list]):
             "Price",
             "Total (Item)",
             "Discount%",
-            "Final Total (Artisan)",
+            "Final Total (Item)",
             "GST%",
             "GST Amt",
-            "Final Total (Invoice)",   # GST-inclusive
+            "Artisan Payout",
+            "Final Total (Invoice)",
             "Status",
-            "Corporation",
             "Location",
+            "Corporation",
         ]
 
-        # Get current header row (strip blanks)
+        # Check existing header
         current_header = [h.strip() for h in worksheet.row_values(1)]
-        current_header = [h for h in current_header if h]  # remove empty strings
+        current_header = [h for h in current_header if h]  # remove blanks
 
         if not current_header:
-            # Sheet is empty → insert fresh header
             worksheet.insert_row(target_header, 1)
-        else:
-            # If mismatch → rewrite header fully to avoid duplicates
-            if current_header != target_header:
-                worksheet.update("1:1", [target_header])
+        elif current_header != target_header:
+            # Reset header row to match exactly
+            worksheet.update("1:1", [target_header])
 
-        # Add location column from user profile
+        # Add location automatically
         current_user = st.session_state.get("username", "")
         location = (
             config["credentials"]["usernames"].get(current_user, {}).get("location", "")
         )
 
-        # Ensure each row matches header length
+        # Ensure rows match header length
         rows_with_location = []
         for r in rows:
             full_row = r.copy()
-            # Fill GST% / GST Amt / Location if caller didn’t add
             while len(full_row) < len(target_header):
                 if len(full_row) == target_header.index("Location"):
                     full_row.append(location)
@@ -258,6 +256,7 @@ def append_to_google_sheet(rows: list[list]):
 
     except Exception as e:
         st.warning(f"⚠️ Failed to update Google Sheet: {e}")
+
 
 
 # =====================
@@ -313,8 +312,23 @@ for i in range(num_items):
             step=0.1,
             key=f"discount_{i}",
         )
+        
+        # GST selection
+        gst_percent = st.selectbox(
+            f"GST % for Item {i + 1}",
+            (0, 3, 5, 12, 18, 28),
+            index=0,
+            key=f"gst_{i}"
+        )
+        
+        # Price calculations
         total_before_discount = price * qty
         total_after_discount = total_before_discount * (1 - discount_item / 100)
+        
+        # Since price is GST-inclusive, extract GST portion
+        gst_amount = total_after_discount * (gst_percent / (100 + gst_percent)) if gst_percent > 0 else 0
+        artisan_payout = total_after_discount - gst_amount
+        
         items.append(
             {
                 "s_no": str(i + 1),
@@ -324,8 +338,12 @@ for i in range(num_items):
                 "discount_percent": float(discount_item),
                 "total": float(total_before_discount),
                 "final_total": float(total_after_discount),
+                "gst_percent": float(gst_percent),
+                "gst_amount": float(gst_amount),
+                "artisan_payout": float(artisan_payout),
             }
         )
+
 
 subtotal = sum(it["final_total"] for it in items)
 gst_amount = subtotal * (gst_percent / 100.0)
@@ -384,19 +402,21 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     start_y = 110
     inv.roundRect(15, start_y, 170, 15 * (len(items) + 1), 5, fill=0)
     inv.setFont("Times-Bold", 4)
-    inv.drawString(20, start_y + 10, "S.No")
-    inv.drawString(45, start_y + 10, "Item")
-    inv.drawString(100, start_y + 10, "Price")
-    inv.drawString(130, start_y + 10, "Qty")
-    inv.drawString(155, start_y + 10, "Total")
+    inv.drawString(15, start_y + 10, "S.No")
+    inv.drawString(35, start_y + 10, "Item")
+    inv.drawString(90, start_y + 10, "Price")
+    inv.drawString(120, start_y + 10, "Qty")
+    inv.drawString(145, start_y + 10, "GST Incl.")
+    inv.drawString(175, start_y + 10, "Total")
 
     y = start_y + 20
     for it in items:
-        inv.drawString(20, y, it["s_no"])
-        inv.drawString(45, y, it["item"])
-        inv.drawString(100, y, f"{it['price']:.2f}")
-        inv.drawString(130, y, str(it["qty"]))
-        inv.drawString(155, y, f"{it['total']:.2f}")
+        inv.drawString(15, y, it["s_no"])
+        inv.drawString(35, y, it["item"])
+        inv.drawString(90, y, f"{it['price']:.2f}")
+        inv.drawString(120, y, str(it["qty"]))
+        inv.drawString(145, y, f"{it['gst_amount']:.2f}")
+        inv.drawString(175, y, f"{it['total']:.2f}")
         y += 15
 
     inv.setFont("Times-Bold", 4)
@@ -475,11 +495,11 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
             it["total"],
             it["discount_percent"],
             it["final_total"],
-            grand_total_incl_gst_calc,  # ✅ store inclusive total
-            gst_percent,                 # ✅ GST%
-            gst_amount_calc,             # ✅ GST Amt
+            it["gst_percent"],
+            it["gst_amount"],
+            it["artisan_payout"],
+            grand_total,   # invoice-level total
             "Active",
-            # Location is auto-added inside append_to_google_sheet()
             Corporation,
         ]
         for it in items
