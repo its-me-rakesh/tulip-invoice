@@ -276,7 +276,6 @@ with col2:
     date_str = st.date_input("Invoice Date", value=datetime.today()).strftime("%d-%m-%Y")
     ph_no = st.text_input("Customer Phone No.")
     payment_method = st.selectbox("Payment Method", ["Cash", "UPI", "Card"])
-    gst_percent = st.selectbox("GST Rate (%)", (0, 3, 5, 12, 18, 28), index=0)
 
     
 
@@ -313,8 +312,19 @@ for i in range(num_items):
             step=0.1,
             key=f"discount_{i}",
         )
+
+        gst_percent_item = st.selectbox(
+            "GST Rate (%)",
+            (0, 3, 5, 12, 18, 28),
+            index=0,
+            key=f"gst_{i}"
+        )
+        
         total_before_discount = price * qty
         total_after_discount = total_before_discount * (1 - discount_item / 100)
+        gst_amount_item = total_after_discount * (gst_percent_item / 100.0)
+        total_incl_gst_item = total_after_discount + gst_amount_item
+        
         items.append(
             {
                 "s_no": str(i + 1),
@@ -323,16 +333,19 @@ for i in range(num_items):
                 "qty": int(qty),
                 "discount_percent": float(discount_item),
                 "total": float(total_before_discount),
-                "final_total": float(total_after_discount),
+                "final_total": float(total_after_discount),           # after discount, before GST
+                "gst_percent": float(gst_percent_item),               # ✅ per-item GST%
+                "gst_amount": float(gst_amount_item),                 # ✅ per-item GST Amt
+                "final_total_incl_gst": float(total_incl_gst_item),
             }
         )
 
-subtotal = sum(it["final_total"] for it in items)
-gst_amount = subtotal * (gst_percent / 100.0)
-grand_total_incl_gst = subtotal + gst_amount
+subtotal = sum(it["final_total"] for it in items)                       # after discount, before GST
+gst_amount_total = sum(it["gst_amount"] for it in items)                # total GST across items
+grand_total_incl_gst = sum(it["final_total_incl_gst"] for it in items)  # fully GST-inclusive
 
 st.markdown(f"### 🧾 Subtotal (After Discount): ₹ {subtotal:.2f}")
-st.markdown(f"### 🧮 GST ({gst_percent}%): ₹ {gst_amount:.2f}")
+st.markdown(f"### 🧮 GST (Total): ₹ {gst_amount_total:.2f}")            # no single % anymore
 st.markdown(f"## 💰 Total (GST Inclusive): ₹ {grand_total_incl_gst:.2f}")
 
 # =====================
@@ -342,9 +355,9 @@ st.markdown(f"## 💰 Total (GST Inclusive): ₹ {grand_total_incl_gst:.2f}")
 def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     total_amount = totals["total_amount"]
     discount_amt = totals["discount_amt"]
-    gst_percent = totals["gst_percent"]            
-    gst_amount = totals["gst_amount"]              
-    grand_total = totals["grand_total_incl_gst"]   
+    subtotal = totals["subtotal"]                         # ✅ add this
+    gst_amount = totals["gst_total"]                      # ✅ renamed: total GST across items
+    grand_total = totals["grand_total_incl_gst"]
 
     inv.line(5, 45, 195, 45)
     inv.translate(10, 40)
@@ -402,8 +415,8 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.setFont("Times-Bold", 4)
     inv.drawString(15,  y + 10, f"Subtotal (After Discount): {subtotal:.2f}")
     inv.drawString(15,  y + 20, f"Total Discount: {discount_amt:.2f}")
-    inv.drawString(15,  y + 30, f"GST ({gst_percent}%): {gst_amount:.2f}")
-    inv.drawString(15, y + 40, f"Grand Total (Incl GST): {grand_total:.2f}")
+    inv.drawString(15,  y + 30, f"GST (Total): {gst_amount:.2f}")                   # ✅ no single %
+    inv.drawString(15,  y + 40, f"Grand Total (Incl GST): {grand_total:.2f}")
     inv.drawString(140, y + 60, "Tulip")
     inv.drawString(140, y + 68, "Signature")
 
@@ -430,17 +443,16 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
         st.stop()
 
     total_amount = sum(it["total"] for it in items)                       # before discount
-    discount_amt = sum(it["total"] - it["final_total"] for it in items)   # discount value
-    subtotal_after_discount = sum(it["final_total"] for it in items)      # after discount
-    gst_amount_calc = subtotal_after_discount * (gst_percent / 100.0)
-    grand_total_incl_gst_calc = subtotal_after_discount + gst_amount_calc
+    discount_amt = sum(it["total"] - it["final_total"] for it in items)   # total discount value
+    subtotal_after_discount = sum(it["final_total"] for it in items)      # after discount, before GST
+    gst_total_calc = sum(it["gst_amount"] for it in items)                # ✅ item-wise GST total
+    grand_total_incl_gst_calc = sum(it["final_total_incl_gst"] for it in items)
     
     totals = {
         "total_amount": total_amount,
         "discount_amt": discount_amt,
-        "subtotal": subtotal_after_discount,
-        "gst_percent": gst_percent,
-        "gst_amount": gst_amount_calc,
+        "subtotal": subtotal_after_discount,       # ✅ used by PDF now
+        "gst_total": gst_total_calc,               # ✅ used by PDF now
         "grand_total_incl_gst": grand_total_incl_gst_calc,
     }
 
@@ -474,13 +486,12 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
             it["price"],
             it["total"],
             it["discount_percent"],
-            it["final_total"],
-            grand_total_incl_gst_calc,  # ✅ store inclusive total
-            gst_percent,                 # ✅ GST%
-            gst_amount_calc,             # ✅ GST Amt
+            it["final_total"],              # (after discount, before GST)
+            it["gst_percent"],              # ✅ per-item GST%
+            it["gst_amount"],               # ✅ per-item GST Amt
+            grand_total_incl_gst_calc,      # ✅ invoice grand total (incl. GST)
             "Active",
-            # Location is auto-added inside append_to_google_sheet()
-            Corporation,
+            Corporation,      
         ]
         for it in items
     ]
@@ -551,13 +562,12 @@ if is_admin or is_master:
                 discount_amt_sel = total_amount_sel * discount_percent / 100.0
                 subtotal_sel = total_amount_sel - discount_amt_sel
                 
-                # ✅ NEW: pull GST info if present; fallback to 0
-                gst_percent_sel = float(invoice_items[0].get("GST%", 0) or 0)
-                gst_amount_sel = float(invoice_items[0].get("GST Amt", 0) or 0)
-                
-                # ✅ The sheet's "Final Total (Invoice)" is GST-inclusive after our change
-                grand_total_sel = float(invoice_items[0].get("Final Total (Invoice)", subtotal_sel + gst_amount_sel) or (subtotal_sel + gst_amount_sel))
-
+                # ✅ NEW: Pull per-row GST and invoice total from the sheet
+                gst_total_sel = float(selected_df["GST Amt"].sum()) if "GST Amt" in selected_df.columns else 0.0
+                if "Final Total (Invoice)" in selected_df.columns and not selected_df["Final Total (Invoice)"].empty:
+                    grand_total_sel = float(selected_df["Final Total (Invoice)"].iloc[0])
+                else:
+                    grand_total_sel = subtotal_sel + gst_total_sel
             
                 invoice_no, stall_no, date_str, ph_no, artisan_code, payment_method, items
                 invoice_no_bkp, stall_no_bkp, date_bkp, ph_bkp, art_bkp, pm_bkp, items_bkp = (
@@ -588,9 +598,8 @@ if is_admin or is_master:
                     {
                         "total_amount": total_amount_sel,
                         "discount_amt": discount_amt_sel,
-                        "grand_total": grand_total_sel,
-                        "gst_percent": gst_percent_sel,
-                        "gst_amount": gst_amount_sel,
+                        "subtotal": subtotal_sel,          # ✅ added
+                        "gst_total": gst_total_sel,        # ✅ added (replaces single rate)
                         "grand_total_incl_gst": grand_total_sel,
                     },
                 )
@@ -601,9 +610,8 @@ if is_admin or is_master:
                     {
                         "total_amount": total_amount_sel,
                         "discount_amt": discount_amt_sel,
-                        "grand_total": grand_total_sel,
-                        "gst_percent": gst_percent_sel,
-                        "gst_amount": gst_amount_sel,
+                        "subtotal": subtotal_sel,          # ✅ added
+                        "gst_total": gst_total_sel,        # ✅ added (replaces single rate)
                         "grand_total_incl_gst": grand_total_sel,
                     },
                 )
