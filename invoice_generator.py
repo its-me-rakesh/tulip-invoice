@@ -387,7 +387,7 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
     inv.drawString(50,  start_y + 10, "Item")
     inv.drawString(75, start_y + 10, "Price")
     inv.drawString(100, start_y + 10, "Qty")
-    inv.drawString(125, start_y + 10, "GST %")
+    inv.drawString(125, start_y + 10, "GST %(incl)")
     inv.drawString(160, start_y + 10, "Total")
 
 
