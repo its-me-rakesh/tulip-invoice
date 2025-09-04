@@ -408,7 +408,7 @@ def _draw_page(inv: canvas.Canvas, heading: str, totals: dict):
 
 
 
-    inv.setFont("Times-Bold", 5)
+    inv.setFont("Times-Bold", 4)
     inv.drawString(15, y + 15, f"Subtotal: {total_amount:.2f}")
     inv.drawString(15, y + 30, f"Total Discount: {discount_amt:.2f}")
     inv.drawString(140, y + 15, f"Grand Total: {grand_total:.2f}")
