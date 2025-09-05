@@ -460,7 +460,7 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
         buf,
         file_name=f"{invoice_no}.pdf",
         mime="application/pdf",)
-        st.success("✅ Invoice saved to your database and data refreshed!")
+        
     
     # Prepare rows WITHOUT location (it will be added inside append_to_google_sheet)
     rows = [
