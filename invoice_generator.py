@@ -459,22 +459,25 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
         "📄 Download Invoice PDF",
         buf,
         file_name=f"{invoice_no}.pdf",
-        mime="application/pdf",
+        mime="application/pdf",)
     # Reset all input fields after invoice download (for all roles)
     for key in list(st.session_state.keys()):
         # Reset all item-related fields (from "Add Items to Invoice")
         if key.startswith(("item_", "price_", "qty_", "discount_", "gst_")):
             del st.session_state[key]
-
+    
     # Reset header fields (but keep billing_counter)
     st.session_state["stall_no"] = ""
     st.session_state["artisan_code"] = ""
     st.session_state["ph_no"] = ""
     st.session_state["payment_method"] = "Cash"
-
+    
     # Reset number of items in "Add Items to Invoice"
     st.session_state["num_items"] = 1
-    )    
+    
+    # Force rerun to reload with cleared fields
+    st.rerun()
+
 
     # Prepare rows WITHOUT location (it will be added inside append_to_google_sheet)
     rows = [
