@@ -466,10 +466,10 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
         st.session_state["invoice_generated"] = True  # ✅ persist flag
 
     if st.session_state.get("invoice_generated", False):
-    st.markdown(
-        "<p style='color:green; font-weight:bold;'>✅ Invoice Generated Successfully</p>",
-        unsafe_allow_html=True,
-    )
+        st.markdown(
+            "<p style='color:green; font-weight:bold;'>✅ Invoice Generated Successfully</p>",
+            unsafe_allow_html=True,
+        )
     
     # Prepare rows WITHOUT location (it will be added inside append_to_google_sheet)
     rows = [
