@@ -475,10 +475,6 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
     # Reset number of items in "Add Items to Invoice"
     st.session_state["num_items"] = 1
     
-    # Force rerun to reload with cleared fields
-    st.rerun()
-
-
     # Prepare rows WITHOUT location (it will be added inside append_to_google_sheet)
     rows = [
         [
