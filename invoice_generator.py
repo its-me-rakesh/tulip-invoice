@@ -455,21 +455,12 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
     pdf.save()
     buf.seek(0)
 
-    download_btn = st.download_button(
+    st.download_button(
         "📄 Download Invoice PDF",
         buf,
         file_name=f"{invoice_no}.pdf",
         mime="application/pdf",
     )
-    
-    if download_btn:
-        st.session_state["invoice_generated"] = True  # ✅ persist flag
-
-    if st.session_state.get("invoice_generated", False):
-        st.markdown(
-            "<p style='color:green; font-weight:bold;'>✅ Invoice Generated Successfully</p>",
-            unsafe_allow_html=True,
-        )
     
     # Prepare rows WITHOUT location (it will be added inside append_to_google_sheet)
     rows = [
