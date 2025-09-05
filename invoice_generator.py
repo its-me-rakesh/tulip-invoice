@@ -509,7 +509,7 @@ if st.button("🧾 Generate Invoice", disabled=st.button_disabled):
     st.session_state["num_items"] = 1
 
     # Force rerun to reload with cleared fields
-    st.experimental_rerun()
+    st.rerun()
 
 
 
