@@ -322,6 +322,10 @@ for i in range(num_items):
             index=0,
             key=f"gst_{i}"
         )
+        if not name.strip() or price <= 0 or qty <= 0:
+        st.error(f"Item {i + 1}: Please enter a valid Item Name, Price (> 0), and Quantity (>= 1).")
+        st.stop()
+
         
         # Price calculations
         total_before_discount = price * qty
