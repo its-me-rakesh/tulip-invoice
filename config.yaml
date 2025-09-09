@@ -34,4 +34,8 @@ credentials:
       password: $2b$12$61vgYkKainDFPu9E1KsNGuWmZagW9cLiGYYic9zUKijiQHmzEfSD.
       role: user
       location: Kolkata
+    testuser:
+      name: tester
+      password: $2b$12$5SBVTorPYGOWkJ6cCQ00muMBrEaYRyF0qxz4o3iCqeltB6hWwFcg6
+      role: user
 gst_number: 07AABCN8953B1ZI
