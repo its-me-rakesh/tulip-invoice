@@ -544,22 +544,39 @@ if is_admin or is_master:
                     st.success(f"✅ Invoice {selected_invoice} restored.")
 
             if st.button("🖨️ Generate PDF for Selected"):
+            
                 invoice_items = selected_df.to_dict(orient="records")
-                items_copy = [
-                    {
-                        "s_no": str(i + 1),
-                        "item": r["Item"],
-                        "price": float(r["Price"]),
-                        "qty": int(r["Qty"]),
-                        "total": float(r["Total (Item)"]),
-                        "discount_percent": float(r.get("Discount%", 0)),
-                        "final_total": float(r.get("Final Total (Item)", r["Total (Item)"])),
-                        "gst_percent": float(r.get("GST%", 0)),    # ✅ get "GST%" column value
-                        "gst_amount": float(r.get("GST Amt", 0)),
-                        "artisan_payout": float(r.get("Artisan Payout", r["Total (Item)"])),
-                    }
-                    for i, r in enumerate(invoice_items)
-                ]
+
+                if not invoice_items:
+                    st.error("⚠️ No items found for this invoice. Cannot regenerate PDF.")
+                    st.stop()
+                
+                items_copy = []
+                for i, r in enumerate(invoice_items):
+                    price = float(r["Price"])
+                    qty = int(r["Qty"])
+                    total = price * qty
+                    discount_percent = float(r.get("Discount%", 0))
+                    final_total = total * (1 - discount_percent / 100)
+                    gst_percent = float(r.get("GST%", 0))
+                    gst_amount = final_total * (gst_percent / (100 + gst_percent)) if gst_percent > 0 else 0
+                    artisan_payout = final_total - gst_amount
+                
+                    items_copy.append(
+                        {
+                            "s_no": str(i + 1),
+                            "item": r["Item"],
+                            "price": price,
+                            "qty": qty,
+                            "total": total,
+                            "discount_percent": discount_percent,
+                            "final_total": final_total,
+                            "gst_percent": gst_percent,
+                            "gst_amount": gst_amount,
+                            "artisan_payout": artisan_payout,
+                        }
+                    )
+                
                 # Rehydrate header fields
                 stall_no_sel = invoice_items[0]["Stall No"]
                 invoice_no_sel = invoice_items[0]["Invoice No"]
@@ -567,10 +584,12 @@ if is_admin or is_master:
                 ph_sel = invoice_items[0]["Phone No"]
                 artisan_sel = invoice_items[0].get("Artisan Code", "")
                 pm_sel = invoice_items[0].get("Payment Method", "Cash")
-                discount_percent = float(invoice_items[0].get("Discount%", 0))
+                
+                # Correct totals
                 total_amount_sel = sum(it["total"] for it in items_copy)
-                discount_amt_sel = total_amount_sel * discount_percent / 100.0
-                grand_total_sel = float(invoice_items[0]["Final Total (Invoice)"])
+                discount_amt_sel = sum(it["total"] - it["final_total"] for it in items_copy)
+                grand_total_sel = sum(it["final_total"] for it in items_copy)
+
 
             
                 invoice_no_bkp, stall_no_bkp, date_bkp, ph_bkp, art_bkp, pm_bkp, items_bkp = (
