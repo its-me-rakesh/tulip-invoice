@@ -782,6 +782,20 @@ if is_admin or is_master:
             st.plotly_chart(fig, use_container_width=True)
 
             # --- Average Discount % per Stall ---
+            # --- Clean Discount% column safely ---
+            if "Discount%" in df.columns:
+                df["Discount%"] = (
+                    df["Discount%"]
+                    .astype(str)
+                    .str.replace("%", "", regex=False)   # remove % sign
+                    .str.replace(",", "", regex=False)   # remove commas if any
+                    .str.strip()
+                )
+                df["Discount%"] = pd.to_numeric(df["Discount%"], errors="coerce")  # convert to float
+            else:
+                st.warning("⚠️ 'Discount%' column missing in data.")
+                df["Discount%"] = 0
+
             stall_discount_avg = df.groupby("Stall No", as_index=False)["Discount%"].mean()
             fig = px.bar(
                 stall_discount_avg,
