@@ -684,9 +684,36 @@ if is_admin or is_master:
             # --- KPIs ---
             st.markdown("### 🔹 Key Metrics")
             col1, col2, col3 = st.columns(3)
-            col1.metric("💰 Total Revenue", f"₹{df['Final Total (Item)'].sum():,.2f}")
-            col2.metric("📦 Items Sold", int(df["Qty"].sum()))
-            col3.metric("🧾 Invoices", df["Invoice No"].nunique())
+            
+            # --- Clean numeric columns safely ---
+            if "Final Total (Item)" in df.columns:
+                df["Final Total (Item)"] = (
+                    pd.to_numeric(
+                        df["Final Total (Item)"]
+                        .astype(str)                        # ensure string
+                        .str.replace("₹", "", regex=False)  # remove currency symbol
+                        .str.replace(",", "", regex=False), # remove commas
+                        errors="coerce"                     # convert bad values to NaN
+                    )
+                )
+            else:
+                st.warning("⚠️ 'Final Total (Item)' column missing — check your Google Sheet.")
+                df["Final Total (Item)"] = 0
+            
+            if "Qty" in df.columns:
+                df["Qty"] = pd.to_numeric(df["Qty"], errors="coerce")
+            else:
+                df["Qty"] = 0
+            
+            # --- Compute KPIs safely ---
+            total_revenue = df["Final Total (Item)"].sum(skipna=True)
+            total_items = int(df["Qty"].sum(skipna=True))
+            total_invoices = df["Invoice No"].nunique() if "Invoice No" in df.columns else 0
+            
+            col1.metric("💰 Total Revenue", f"₹{total_revenue:,.2f}")
+            col2.metric("📦 Items Sold", total_items)
+            col3.metric("🧾 Invoices", total_invoices)
+
 
             # --- Revenue Over Time ---
             rev_over_time = (
